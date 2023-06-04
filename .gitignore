@@ -32,3 +32,6 @@
 *.app
 
 nodes/.vs/*
+
+*.user
+nodes/*/obj/
