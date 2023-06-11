@@ -1,16 +1,16 @@
-#include <iostream>
 #include <lcm/lcm-cpp.hpp>
+#include "skylight_message/button_press.hpp"
+#include "../common/messaging.h"
 
-int main() {
-
-    lcm::LCM lcm;
-
-    if (!lcm.good())
+int main(int argc, char ** argv)
+{
+    skylight::Messaging lcm;
+    if(!lcm.good())
         return 1;
 
-    std::cout << "LCM is running in Test Node 1" << std::endl;
+    skylight_message::button_press button_press;
+    button_press.uid = "left_hand";
+    lcm.publish("button_press", &button_press);
 
-    std::string s;
-    std::cin >> s;
     return 0;
 }

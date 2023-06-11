@@ -15,6 +15,14 @@ sudo apt-get -f install
 sudo dpkg -i linux-perf_6.1.20-2~bpo11+1_arm64.deb 
 ```
 
+### toml
+```
+git clone https://github.com/cktan/tomlcpp
+cd tomlcpp
+make
+sudo make install
+```
+
 ### LCM
 ```
 git clone https://github.com/lcm-proj/lcm
