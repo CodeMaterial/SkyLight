@@ -2,7 +2,8 @@
 #include <lcm/lcm-cpp.hpp>
 #include <iostream>
 #include <utility>
-#include "tomlcpp.hpp"
+#include <tomlcpp.hpp>
+#include "skylight_time.h"
 
 namespace skylight
 {
@@ -18,15 +19,35 @@ public:
 
 template<class MessageType>
 inline int publish(const std::string &channel, const MessageType *msg) {
-    auto [mapping_found, mapped_channel] = m_pRouting->getString(channel);
-    if (mapping_found) {
-        std::cout << "found mapping from " << channel << " to " << mapped_channel << std::endl;
-        return lcm::LCM::publish(mapped_channel, msg);
-    }
-    else
+
+        /*
+    if(msg->timestamp == 0)
     {
-        return lcm::LCM::publish(mapped_channel, msg);
+        msg->timestamp = skylight::Now();
     }
+         */
+    {
+        auto [mapping_found, mapped_channel] = m_pRouting->getString(channel);
+
+        if (mapping_found) {
+            std::cout << "found mapping from " << channel << " to " << mapped_channel << std::endl;
+            return lcm::LCM::publish(mapped_channel, msg);
+        }
+    }
+
+    {
+        auto channelArray = m_pRouting->getArray(channel);
+        if (channelArray) {
+            for (int i = 0; ; i++) {
+                auto [mapping_found, mapped_channel] = channelArray->getString(i);
+                if (!mapping_found) break;
+
+                lcm::LCM::publish(mapped_channel, msg);
+            }
+        }
+    }
+
+    return lcm::LCM::publish(channel, msg);
 }
 private:
     void LoadMapping()
