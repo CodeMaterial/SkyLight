@@ -1,0 +1,59 @@
+button[x]
+	pub:
+		button/x/down
+		button/x/up
+
+speech
+	pub:
+		speech/command
+
+	sub:
+		speech/start
+		speech/stop
+		speech/register
+
+cli
+	pub:
+		cli/command
+
+command_control
+	pub:
+		basically all of them!
+	sub:
+		ctrl/command
+		ctrl/confirm
+
+sound[x]
+	sub:
+		sound/x/play
+		sound/x/say
+		sound/x/stop
+		sound/x/vol
+
+effects_system:
+	pub:
+		leds/buffer
+	sub:
+		effect/start
+		effect/stop
+
+
+led_driver:
+	sub:
+		leds/buffer - byte array 12000
+
+
+ctrl/confirm
+confirm?
+
+
+have a preferences file that replaces the topics on registration!
+
+liiike:
+
+cli/command -> ctrl/command
+speech/command -> ctrl/command
+
+button/left/down -> speech/start
+button/left/up -> speech/stop
+button/right/down -> ctrl/confirm
