@@ -1,0 +1,13 @@
+# This is thr routing file.
+# This file is consumed on initialisation of each node
+# Any topics in the key field are mapped to the topics in the value field.
+# This can be done as 1 to 1
+# "old_topic" = "new_topic
+# or 1 to many
+# "old_topic" = ["new_topic_1", "new_topic_2]
+# or many to 1
+# "old_topic_1" = "new_topic"
+# "old_topic_2" = "new_topic"
+
+[routing]
+    "button_press" = ["button_press", "effects/stop"]
