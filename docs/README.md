@@ -13,6 +13,7 @@ wget http://ftp.uk.debian.org/debian/pool/main/l/linux/linux-perf_6.1.20-2~bpo11
 sudo dpkg -i linux-perf_6.1.20-2~bpo11+1_arm64.deb 
 sudo apt-get -f install
 sudo dpkg -i linux-perf_6.1.20-2~bpo11+1_arm64.deb 
+sudo sh -c 'echo 1 > /proc/sys/kernel/perf_event_paranoid'
 ```
 
 ### toml
@@ -36,7 +37,7 @@ sudo make install
 
 ### Spdlog install
 ```
-sudo apt-get install libspdlog-dev
+sudo apt install libspdlog-dev
 ```
 
 # Speech Node
@@ -97,6 +98,3 @@ pcm.softvol {
     }
 }
 ```
-
-
-sudo sh -c 'echo 1 > /proc/sys/kernel/perf_event_paranoid'

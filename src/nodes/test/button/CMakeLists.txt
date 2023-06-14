@@ -6,6 +6,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(SKYLIGHT_ROOT ../../../..)
 
 find_package(lcm REQUIRED)
+find_package(spdlog REQUIRED)
 include(${LCM_USE_FILE})
 
 lcm_wrap_types(
@@ -21,12 +22,12 @@ target_include_directories(${PROJECT_NAME}_messages INTERFACE
 
 
 add_executable(${PROJECT_NAME} main.cpp)
-lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp)
+lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog)
 
 configure_file(${SKYLIGHT_ROOT}/src/config/service_template.service ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service)
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
         DESTINATION /etc/systemd/system)

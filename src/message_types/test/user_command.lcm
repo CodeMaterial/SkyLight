@@ -2,6 +2,6 @@ package skylight_message;
 
 struct user_command
 {
-    int64_t     timestamp;
+    int64_t    timestamp;
     string      command;
 }
