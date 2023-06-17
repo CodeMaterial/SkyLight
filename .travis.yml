@@ -1,0 +1,11 @@
+language: cpp
+dist: xenial
+compiler: gcc
+os: linux
+sudo: true
+env:
+  - BUILD_TYPE=Debug
+
+script:
+  - ./install_dependencies.sh
+  - ./build_and_install.sh
