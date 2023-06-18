@@ -8,5 +8,5 @@ arch: arm64
 env: BUILD_TYPE=Debug
 
 script:
-  - ./install_dependencies.sh
-  - ./build_and_install.sh
+  - scripts/install_dependencies.sh
+  - scripts/build_and_install.sh
