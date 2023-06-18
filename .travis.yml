@@ -5,7 +5,7 @@ compiler: gcc
 os: linux
 arch: arm64
 
-env: BUILD_TYPE=Debug
+env: BUILD_TYPE=Release
 
 script:
   - ./scripts/install_dependencies.sh

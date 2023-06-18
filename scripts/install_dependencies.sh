@@ -10,7 +10,8 @@ mkdir dependencies && cd dependencies
 
 git clone https://github.com/cktan/tomlcpp
 cd tomlcpp
-sudo make install
+make toml_json
+sudo make install toml_json
 cd ..
 
 
