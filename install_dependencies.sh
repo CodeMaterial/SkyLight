@@ -7,7 +7,6 @@ mkdir dependencies && cd dependencies || exit
 
 git clone https://github.com/cktan/tomlcpp
 cd tomlcpp || exit
-make tomlcpp
 sudo make install
 cd ..
 
