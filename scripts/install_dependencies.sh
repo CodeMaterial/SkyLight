@@ -9,13 +9,13 @@ sudo rm -rf dependencies
 mkdir dependencies && cd dependencies
 
 git clone https://github.com/cktan/tomlcpp
-cd tomlcpp || exit
+cd tomlcpp
 sudo make install
 cd ..
 
 
 git clone https://github.com/lcm-proj/lcm
-cd lcm || exit
+cd lcm
 mkdir build && cd build
 cmake ..
 make
@@ -23,11 +23,14 @@ sudo make install
 cd ..
 
 
-#we could use sudo apt-get install libspdlog-dev for debian, however it's more portable to build from source
-git clone https://github.com/gabime/spdlog
-cd spdlog || exit
-mkdir build && cd build
-cmake ..
-make
-sudo make install
-cd ..
+#libspdlog-dev is only available for debian
+sudo apt-get install libspdlog-dev ||
+{
+  git clone https://github.com/gabime/spdlog
+  cd spdlog
+  mkdir build && cd build
+  cmake ..
+  make
+  sudo make install
+  cd ..
+}
