@@ -1,10 +1,12 @@
 language: cpp
 dist: xenial
 compiler: gcc
+
 os: linux
+arch: arm64
+
 sudo: true
-env:
-  - BUILD_TYPE=Debug
+env: BUILD_TYPE=Debug
 
 script:
   - ./install_dependencies.sh
