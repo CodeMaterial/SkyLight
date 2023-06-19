@@ -10,7 +10,8 @@ namespace skylight {
     class Messaging
             : public lcm::LCM {
     public:
-        explicit Messaging(std::string lcm_url = "") : lcm::LCM(std::move(lcm_url)) {
+        explicit Messaging(std::string lcm_url = "udpm://239.255.76.67:7667?ttl=1") :
+        lcm::LCM(std::move(lcm_url)) {
             LoadMapping();
         };
 
@@ -45,7 +46,7 @@ namespace skylight {
             std::string configPath = "/home/pi/SkyLight/src/config/lcm_config.toml";
             toml::Result res = toml::parseFile(configPath);
             if (!res.table) {
-                spdlog::error("Could not load %s", configPath);
+                spdlog::error("Could not load {}", configPath);
             }
             m_pRouting = res.table->getTable("routing");
         }

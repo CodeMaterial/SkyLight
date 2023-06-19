@@ -25,7 +25,7 @@ cd ..
 
 
 #libspdlog-dev is only available for debian
-sudo apt-get install libspdlog-dev ||
+sudo apt-get -y install libspdlog-dev ||
 {
   git clone https://github.com/gabime/spdlog
   cd spdlog

@@ -1,0 +1,7 @@
+package skylight_message;
+
+struct pixel_buffer
+{
+    int64_t     timestamp;
+    byte        buffer[4000][3];
+}
