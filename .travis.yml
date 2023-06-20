@@ -1,9 +1,9 @@
 language: cpp
-dist: xenial
+dist: jammy
 compiler: gcc
 
 os: linux
-arch: arm64
+arch: amd64
 
 env: BUILD_TYPE=Release
 
