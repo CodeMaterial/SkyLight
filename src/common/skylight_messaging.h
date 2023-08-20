@@ -18,6 +18,9 @@ namespace skylight {
         template<class MessageType>
         inline int publish(const std::string &channel, const MessageType *msg) {
 
+            spdlog::info("Publishing to {}", channel);
+
+
             auto [mapping_found, mapped_channel] = m_pRouting->getString(channel);
 
             if (mapping_found) {

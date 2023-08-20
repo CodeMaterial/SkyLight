@@ -10,4 +10,6 @@
 # "old_topic_2" = "new_topic"
 
 [routing]
-"button_press" = ["effects/start"]
+"button_17_down" = ["user/voice_start"]
+"button_17_up" = ["user/voice_stop"]
+"button_27_down" = ["user/confirm"]
