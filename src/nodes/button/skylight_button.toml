@@ -1,4 +1,0 @@
-#config for the button system!
-
-GPIO_ports = [17,27]
-debounce = 10 #microseconds

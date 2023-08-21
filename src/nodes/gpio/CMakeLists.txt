@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(skylight_button)
+project(skylight_gpio)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -47,7 +47,9 @@ include(${LCM_USE_FILE})
 
 lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
+        ${SKYLIGHT_ROOT}/src/message_types/pixel_buffer.lcm
         ${SKYLIGHT_ROOT}/src/message_types/trigger.lcm
+
 )
 
 lcm_add_library(${PROJECT_NAME}_messages CPP ${${PROJECT_NAME}_headers})
@@ -67,8 +69,3 @@ install(TARGETS ${PROJECT_NAME}
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
         DESTINATION /etc/systemd/system)
-
-# Required if using a config file
-
-install(FILES skylight_button.toml
-        DESTINATION /usr/local/etc)
