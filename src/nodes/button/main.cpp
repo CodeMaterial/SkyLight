@@ -6,6 +6,7 @@
 #include "skylight_message/user_command.hpp"
 #include "skylight_messaging.h"
 #include "skylight_time.h"
+#include "skylight_config.h"
 
 
 #include <pigpio.h>
@@ -22,30 +23,41 @@ void ButtonCallback(int gpioPin, int level, unsigned int tick, void* messaging)
 
 
 int main(int argc, char **argv) {
-    skylight::Messaging messaging;
-    if (!messaging.good())
+
+    std::shared_ptr<toml::Table> pConfigTable = skylight::GetConfig("skylight_button.toml");
+
+    if(!pConfigTable)
+    {
         return 1;
+    }
 
-    int gpioA = 17;
-    int gpioB = 27;
+    std::vector<long int> pGPIO_ports = *pConfigTable->getArray("GPIO_ports")->getIntVector();
+    auto [ok, debounce] = pConfigTable->getInt("debounce");
 
-    gpioInitialise();
 
-    gpioSetMode(gpioA, PI_INPUT);
-    gpioSetMode(gpioB, PI_INPUT);
+    if(!ok || pGPIO_ports.size() == 0)
+    {
+        return 1;
+    }
 
-    /* pull up is needed as encoder common is grounded */
+    skylight::Messaging messaging;
+    if (!messaging.good()) {
+        return 1;
+    }
 
-    gpioSetPullUpDown(gpioA, PI_PUD_UP);
-    gpioSetPullUpDown(gpioB, PI_PUD_UP);
+    if(gpioInitialise() < 0)
+    {
+        return 1;
+    }
 
-    gpioGlitchFilter(gpioA, 1000); //ms / 1 millisecond
-    gpioGlitchFilter(gpioB, 1000); //ms / 1 millisecond
-
-    /* monitor encoder level changes */
-
-    gpioSetAlertFuncEx(gpioA, &ButtonCallback, static_cast<void*>(&messaging));
-    gpioSetAlertFuncEx(gpioB, &ButtonCallback, static_cast<void*>(&messaging));
+    for(int GPIO_port: pGPIO_ports)
+    {
+        spdlog::info("setting up gpio port {} with debounce of {}", GPIO_port, debounce);
+        gpioSetMode(GPIO_port, PI_INPUT);
+        gpioSetPullUpDown(GPIO_port, PI_PUD_UP);
+        gpioGlitchFilter(GPIO_port, debounce);
+        gpioSetAlertFuncEx(GPIO_port, &ButtonCallback, static_cast<void*>(&messaging));
+    }
 
     while(true)
     {

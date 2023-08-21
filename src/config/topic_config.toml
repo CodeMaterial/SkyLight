@@ -1,4 +1,6 @@
-# This is thr routing file.
+# This is an example routing file.
+# This should be placed in /usr/local/etc
+
 # This file is consumed on initialisation of each node
 # Any topics in the key field are mapped to the topics in the value field.
 # This can be done as 1 to 1
@@ -10,6 +12,7 @@
 # "old_topic_2" = "new_topic"
 
 [routing]
-"button_17_down" = ["user/voice_start"]
-"button_17_up" = ["user/voice_stop"]
-"button_27_down" = ["user/confirm"]
+
+"button_17_down" = "user/voice_start"
+"button_17_up" = "user/voice_stop"
+"button_27_down" = ["user/confirm", "user/trigger"]

@@ -67,3 +67,8 @@ install(TARGETS ${PROJECT_NAME}
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
         DESTINATION /etc/systemd/system)
+
+# Required if using a config file
+
+install(FILES skylight_button.toml
+        DESTINATION /usr/local/etc)

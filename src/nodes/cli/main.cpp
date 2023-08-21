@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     CLI::App app{"App description"};
 
     std::string broadcastChannel = "command";
-    app.add_option("-c,--channel", broadcastChannel, "The channel to broadcast the command");
+    app.add_option("-c,--channel", broadcastChannel, "The channel to broadcast the command")->required();
 
     CLI11_PARSE(app, argc, argv);
 
