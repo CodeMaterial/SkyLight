@@ -34,7 +34,12 @@ public:
 
         char* charBuffer = const_cast<char*>(reinterpret_cast<const char*>(msg->buffer));
 
+        spdlog::info("buffer sending");
+
         spiWrite(mSpiDevice, charBuffer, 28800);
+
+        spdlog::info("buffer sent");
+
     }
 
 private:
@@ -45,6 +50,7 @@ private:
 
 void ButtonCallback(int gpioPin, int level, unsigned int tick, void* messaging)
 {
+    spdlog::info("button {} state changed to {}", gpioPin, level);
     skylight_message::trigger button_press;
     button_press.timestamp = skylight::Now();
     std::string channel =  fmt::format("button_{}_{}", gpioPin, level?"up":"down");
