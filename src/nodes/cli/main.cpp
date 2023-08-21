@@ -1,9 +1,11 @@
 #include <iostream>
+#include "CLI11.hpp"
 #include "spdlog/spdlog.h"
-#include "skylight_message/user_command.hpp"
+
 #include "skylight_messaging.h"
 #include "skylight_time.h"
-#include "CLI11.hpp"
+
+#include "skylight_message/user_command.hpp"
 
 
 int main(int argc, char **argv) {
@@ -18,7 +20,11 @@ int main(int argc, char **argv) {
     skylight::Messaging messaging;
 
     if (!messaging.good())
+    {
+        spdlog::error("cli system failed to start the messaging system");
         return 1;
+    }
+
 
     do {
         std::cout << "Command to send to '" << broadcastChannel << "': ";

@@ -1,3 +1,4 @@
 #config for the led driver system!
 
 speed = 10000000
+spiDevice = 0

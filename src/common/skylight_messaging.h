@@ -19,14 +19,14 @@ namespace skylight {
         template<class MessageType>
         inline int publish(const std::string &channel, const MessageType *msg) {
 
-            spdlog::info("Publishing to {}", channel);
+            spdlog::debug("Publishing to {}", channel);
 
             if(m_pRouting) {
 
                 auto [mapping_found, mapped_channel] = m_pRouting->getString(channel);
 
                 if (mapping_found) {
-                    spdlog::info("found 1:1 mapping from {} to {}", channel, mapped_channel);
+                    spdlog::debug("found 1:1 mapping from {} to {}", channel, mapped_channel);
                     lcm::LCM::publish(mapped_channel, msg);
                 }
 
@@ -35,7 +35,7 @@ namespace skylight {
                     for (int i = 0;; i++) {
                         auto [mapping_found, mapped_channel] = channelArray->getString(i);
                         if (!mapping_found) break;
-                        spdlog::info("found 1:many mapping from {} to {}", channel, mapped_channel);
+                        spdlog::debug("found 1:many mapping from {} to {}", channel, mapped_channel);
                         lcm::LCM::publish(mapped_channel, msg);
                     }
                 }

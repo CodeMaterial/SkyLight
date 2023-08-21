@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(skylight_sound)
+project(skylight_effect_driver)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -7,11 +7,14 @@ set(SKYLIGHT_ROOT ../../..)
 
 find_package(lcm REQUIRED)
 find_package(spdlog REQUIRED)
+
 include(${LCM_USE_FILE})
 
 lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
-        # your message types go here
+        ${SKYLIGHT_ROOT}/src/message_types/pixel_buffer.lcm
+        ${SKYLIGHT_ROOT}/src/message_types/trigger.lcm
+
 )
 
 lcm_add_library(${PROJECT_NAME}_messages CPP ${${PROJECT_NAME}_headers})
