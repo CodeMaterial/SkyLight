@@ -3,5 +3,5 @@ package skylight_message;
 struct pixel_buffer
 {
     int64_t     timestamp;
-    byte        buffer[10000][3];
+    byte        buffer[28800];
 }

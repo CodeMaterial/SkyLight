@@ -1,7 +1,6 @@
 package skylight_message;
 
-struct user_command
+struct trigger
 {
     int64_t    timestamp;
-    string      command;
 }
