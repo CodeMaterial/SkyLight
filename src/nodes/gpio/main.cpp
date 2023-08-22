@@ -32,6 +32,16 @@ public:
                      const skylight_message::pixel_buffer *msg) {
         spdlog::info("buffer received on {} at {}", chan, msg->timestamp);
 
+        // if the incoming buffer of enabled / disabled channels is different to the one we have stored, update
+
+        char* channelBuff = const_cast<char*>(reinterpret_cast<const char*>(msg->enabledChannels));
+
+        if(strcmp(channelBuff, mEnabledChannels) != 0)
+        {
+            memcpy(mEnabledChannels, channelBuff, 24);
+            UpdateChannels();
+        }
+
         char* charBuffer = const_cast<char*>(reinterpret_cast<const char*>(msg->buffer));
 
         spdlog::info("buffer sending");
@@ -42,8 +52,16 @@ public:
 
     }
 
+    bool UpdateChannels()
+    {
+        spiWrite(mSpiDevice, mEnabledChannels, 24);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        return true;
+    }
+
 private:
     int mSpiDevice;
+    char mEnabledChannels[24];
 
 };
 

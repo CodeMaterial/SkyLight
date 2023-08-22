@@ -1,12 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <chrono>
 #include <thread>
-#include <pigpio.h>
 #include "spdlog/spdlog.h"
 
 #include "skylight_messaging.h"
-#include "skylight_config.h"
 #include "skylight_time.h"
 
 #include "skylight_message/pixel_buffer.hpp"
@@ -34,7 +30,13 @@ public:
             return false;
         }
 
-        lcm::Subscription* sub = mMessaging.subscribe("effect_driver/update", &EffectDriver::Update, this);
+        mMessaging.subscribe("effect_driver/update", &EffectDriver::Update, this);
+
+        for(int i = 0; i < 24; i++)
+        {
+            mBuffer.enabledChannels[i] = 1;
+        }
+
 
         return true;
     }
@@ -43,7 +45,19 @@ public:
     {
         spdlog::info("update");
         mBuffer.timestamp = skylight::Now();
-        mMessaging.publish("led/buffer", &mBuffer);
+        int hz = 50;
+        std::chrono::time_point start = std::chrono::system_clock::now();
+        for(int i = 0; i < hz; i++)
+        {
+            std::this_thread::sleep_until(start + std::chrono::microseconds((1000000/hz)*i));
+            spdlog::info("sending buffer");
+            mMessaging.publish("led/buffer", &mBuffer);
+
+            if(mBuffer.enabledChannels[0] == 0) // lets flick the first channel on and off
+                mBuffer.enabledChannels[0] = 1;
+            else
+                mBuffer.enabledChannels[0] = 0;
+        }
     }
 
     void Run()

@@ -230,13 +230,29 @@ void setup() {
 }
 
 void loop() {
-    int i;
 
     if (spiRxComplete) {
-        Serial.println(spiRxIdx);
-        Serial.flush();
-        spiRxComplete = 0;
-        spiRxIdx = 0;
+      Serial.println(spiRxIdx);
+      Serial.flush();
+      if(spiRxIdx == 28800)
+      {
+        Serial.print("RGB ");
+        for(int i=0; i<3; i++)
+        {
+           Serial.print(spiRx[i]); Serial.print(" ");
+        }
+        Serial.println("");
+      }
+      if(spiRxIdx == 24)
+      {
+        for(int i=0; i<24; i++)
+        {
+          Serial.print("c"); Serial.print(i); Serial.print(" "); Serial.println(spiRx[i]);
+        }
+      }
+        
+      spiRxComplete = 0;
+      spiRxIdx = 0;
     }
 }
 

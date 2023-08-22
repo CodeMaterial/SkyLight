@@ -1,1 +1,3 @@
 #config for the effect driver system!
+
+refresh_rate = 50
