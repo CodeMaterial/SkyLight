@@ -220,34 +220,77 @@ SPISlave_T4_FUNC void SPISlave_T4_OPT::begin() {
 
 #endif
 
+
+
+
+
+#include <OctoWS2811.h>
+
+
+const int channelCount = 24;
+const int channelSize = 400;
+const int pins[] = {23,22,21,20,19,18,17,16,15,14, 41,40,39,38,37,36,35,34,33, 28,29,30,31,32};
+
+
+DMAMEM int displayMemory[channelSize * channelCount * 3 / 4];
+int drawingMemory[channelSize * channelCount * 3 / 4];
+
+byte channelToPin[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // intialise them all to point to 0. this is how we disable some channels without having to re-do the buffer
+
+OctoWS2811 leds(channelSize, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz, channelCount, channelToPin);
+
 SPISlave_T4<&SPI, SPI_8_BITS> mySPI;
+
 
 void setup() {
     Serial.begin(115200);	//baudrate does not matter (is USB VCP anyway)
-    while ( ! Serial) {}
-    Serial.println("START new...");
     mySPI.begin();
+    leds.begin();
 }
+
 
 void loop() {
 
     if (spiRxComplete) {
-      Serial.println(spiRxIdx);
-      Serial.flush();
+      Serial.print("Data recieved: "); Serial.println(spiRxIdx);
+
       if(spiRxIdx == 28800)
       {
-        Serial.print("RGB ");
-        for(int i=0; i<3; i++)
+        for(int ledIndex=0; ledIndex<channelCount*channelSize; ledIndex++)
         {
-           Serial.print(spiRx[i]); Serial.print(" ");
+           leds.setPixel(ledIndex, spiRx[ledIndex*3],spiRx[ledIndex*3 + 1], spiRx[ledIndex*3 + 2]);
         }
-        Serial.println("");
+        Serial.println("Showing LEDS");
+        leds.show();
+
       }
       if(spiRxIdx == 24)
       {
-        for(int i=0; i<24; i++)
+        bool update = false;
+        for(int channelId=0; channelId<24; channelId++)
         {
-          Serial.print("c"); Serial.print(i); Serial.print(" "); Serial.println(spiRx[i]);
+          if(spiRx[channelId] == 1 && channelToPin[channelId] == 0) 
+          {
+            update = true;
+            channelToPin[channelId] = pins[channelId];
+            Serial.print("Channel "); Serial.print(channelId); Serial.println(" enabled");
+          }
+          
+          if(spiRx[channelId] == 0 && channelToPin[channelId] != 0) 
+          {
+            update = true;
+            channelToPin[channelId] = 0;
+            Serial.print("Channel "); Serial.print(channelId); Serial.println(" disabled");
+
+          }
+
+        }
+        if(update)
+        {
+          Serial.println("Updating pin list");
+          leds = OctoWS2811(channelSize, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz, channelCount, channelToPin);
+          leds.begin();
+          Serial.println("Pin list updated");
         }
       }
         
