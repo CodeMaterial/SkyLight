@@ -22,6 +22,7 @@ public:
 
     bool Connect(int chan, int speed, int flags=0)
     {
+        spdlog::info("starting buffer handler on channel {} with speed {}", chan, speed);
         mSpiDevice = spiOpen(chan, speed, flags);
         return mSpiDevice >= 0;
     }
@@ -40,22 +41,23 @@ public:
         {
             memcpy(mEnabledChannels, channelBuff, 24);
             UpdateChannels();
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
         }
 
         char* charBuffer = const_cast<char*>(reinterpret_cast<const char*>(msg->buffer));
 
         spdlog::info("buffer sending");
 
-        spiWrite(mSpiDevice, charBuffer, 28800);
+        int spiWriteByteCount = spiWrite(mSpiDevice, charBuffer, 28800);
 
-        spdlog::info("buffer sent");
+        spdlog::info("buffer sent of size {}", spiWriteByteCount);
 
     }
 
     bool UpdateChannels()
     {
-        spiWrite(mSpiDevice, mEnabledChannels, 24);
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        int spiWriteByteCount = spiWrite(mSpiDevice, mEnabledChannels, 24);
+        spdlog::info("updating channels with {} bytes", spiWriteByteCount);
         return true;
     }
 

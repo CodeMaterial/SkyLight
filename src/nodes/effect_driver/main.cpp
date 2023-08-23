@@ -32,11 +32,9 @@ public:
 
         mMessaging.subscribe("effect_driver/update", &EffectDriver::Update, this);
 
-        for(int i = 0; i < 24; i++)
-        {
-            mBuffer.enabledChannels[i] = 1;
-        }
+        std::fill(std::begin(mBuffer.buffer),std::begin(mBuffer.buffer)+28800,0);
 
+        std::fill(std::begin(mBuffer.enabledChannels),std::begin(mBuffer.enabledChannels)+24,1);
 
         return true;
     }
@@ -46,18 +44,18 @@ public:
         spdlog::info("update");
         mBuffer.timestamp = skylight::Now();
         int hz = 50;
-        std::chrono::time_point start = std::chrono::system_clock::now();
-        for(int i = 0; i < hz; i++)
-        {
-            std::this_thread::sleep_until(start + std::chrono::microseconds((1000000/hz)*i));
-            spdlog::info("sending buffer");
-            mMessaging.publish("led/buffer", &mBuffer);
 
-            if(mBuffer.enabledChannels[0] == 0) // lets flick the first channel on and off
-                mBuffer.enabledChannels[0] = 1;
-            else
-                mBuffer.enabledChannels[0] = 0;
+        for(int channelID=0; channelID < 24; channelID++)
+        {
+            mBuffer.buffer[channelID*400*3 + channelID] = 255; // c0 = 1:red, c1 = 1:green, c2 = 1:blue, c3 = 2:red ...
         }
+
+        if(mBuffer.enabledChannels[0] == 1)
+            mBuffer.enabledChannels[0] = 0;
+        else
+            mBuffer.enabledChannels[0] = 1;
+
+        mMessaging.publish("led/buffer", &mBuffer);
     }
 
     void Run()
@@ -69,7 +67,7 @@ private:
     skylight::Messaging mMessaging;
     std::shared_ptr<toml::Table> mPConfig;
     skylight_message::pixel_buffer mBuffer;
-
+    int temp = 0;
 };
 
 
