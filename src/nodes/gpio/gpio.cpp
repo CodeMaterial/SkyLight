@@ -41,6 +41,7 @@ bool skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *p
 
 }
 
+// this threaded version is //very// broken, needs fixing
 bool skylight::SPI::SendBufferToHardwareAsync(const skylight_message::pixel_buffer *pMsg) {
 
     spdlog::info("waiting for send thread to be joinable");
@@ -157,7 +158,7 @@ void skylight::GPIO::Update(const lcm::ReceiveBuffer *rbuf, const std::string &c
 void skylight::GPIO::ReceiveBuffer(const skylight_message::pixel_buffer *pMsg) {
     spdlog::info("gpio system received buffer");
 
-    mSPI.SendBufferToHardwareAsync(pMsg);
+    mSPI.SendBufferToHardware(pMsg);
 
 }
 

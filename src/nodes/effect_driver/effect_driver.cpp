@@ -12,8 +12,13 @@ skylight::EffectDriver::EffectDriver() {
 
     mpConfig = skylight::GetConfig("skylight_effect_driver.toml");
 
-    auto [ledsPerStripValid, mLedsPerStrip] = mpConfig->getInt("leds_per_strip");
-    auto [channelCountValid, mChannelCount] = mpConfig->getInt("channels");
+    auto [ledsPerStripValid, ledsPerStrip] = mpConfig->getInt("leds_per_strip");
+    auto [channelCountValid, channelCount] = mpConfig->getInt("channels");
+
+    mLedsPerStrip = static_cast<int>(ledsPerStrip);
+    mChannelCount = static_cast<int>(channelCount);
+
+    spdlog::info("initialised effect driver with {} leds per channel and {} channels", mLedsPerStrip, mChannelCount);
 
     if (!ledsPerStripValid || !channelCountValid) {
         throw std::runtime_error("effect driver failed to read the leds_per_strip or channels");
@@ -68,15 +73,21 @@ void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const st
     auto [refreshRateValid, refreshRate] = mpConfig->getInt("refresh_rate");
     if (!refreshRateValid) return;
 
-    mNextFrameTimestamp = effectStart;
+    int i = 0;
+    int j = 0;
+
+    mNextFrameTimestamp = std::chrono::steady_clock::now();
+    BlackNow();
 
     while (mNextFrameTimestamp < effectEnd) {
         // do stuff to the buffer here referencing mNextFrameTimestamp for the "send" time
         {
-            std::chrono::duration timeSinceStart = mNextFrameTimestamp - effectStart;
-            int msSinceStart = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceStart).count();
-            spdlog::info("ms since start {}", msSinceStart);
-            mBuffer.buffer[msSinceStart] = 255;
+            mBuffer.buffer[i] = j;
+            j += 10;
+            if (j > 255) {
+                j = 0;
+                i++;
+            }
         }
 
         PublishLedBuffer();
@@ -121,8 +132,11 @@ bool skylight::EffectDriver::UpdateLedBuffer() {
 
 void skylight::EffectDriver::BlackNow() {
     spdlog::info("setting leds to black");
-    std::fill(std::begin(mBuffer.enabledChannels), std::begin(mBuffer.enabledChannels) + mChannelCount, 1);
+
+    std::fill(std::begin(mBuffer.buffer), std::begin(mBuffer.buffer) + mLedsPerStrip * mChannelCount * 3, 0);
+
     PublishLedBuffer();
+    WaitUntilNextFrame();
     UpdateLedBuffer();
 }
 
