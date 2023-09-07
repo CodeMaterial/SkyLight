@@ -5,6 +5,7 @@
 #include <tomlcpp.hpp>
 #include <string>
 #include "skylight_config.h"
+#include <thread>
 
 namespace skylight {
 
@@ -12,16 +13,20 @@ namespace skylight {
             : public lcm::LCM {
     public:
         explicit Messaging(std::string lcm_url = "udpm://239.255.76.67:7667?ttl=1") :
-        lcm::LCM(std::move(lcm_url)) {
+                lcm::LCM(std::move(lcm_url)) {
             LoadMapping();
         };
+
+        ~Messaging() {
+            Stop();
+        }
 
         template<class MessageType>
         inline int publish(const std::string &channel, const MessageType *msg) {
 
             spdlog::debug("Publishing to {}", channel);
 
-            if(m_pRouting) {
+            if (m_pRouting) {
 
                 auto [mapping_found, mapped_channel] = m_pRouting->getString(channel);
 
@@ -44,6 +49,17 @@ namespace skylight {
             return lcm::LCM::publish(channel, msg);
         }
 
+        void Start() {
+            Stop();
+            mHandlerThread = std::thread(&skylight::Messaging::HandleMessages, this);
+        }
+
+        void Stop() {
+            mRunning = false;
+            if (mHandlerThread.joinable()) mHandlerThread.join();
+        }
+
+
     private:
         void LoadMapping() {
 
@@ -51,16 +67,22 @@ namespace skylight {
 
             if (!pConfig) {
                 spdlog::error("Could not load lcm config, using none");
-            }
-            else
-            {
+            } else {
                 m_pRouting = pConfig->getTable("routing");
             }
+        }
 
+        void HandleMessages() {
+            while (mRunning) {
+                handle();
+            }
         }
 
     private:
 
         std::shared_ptr<toml::Table> m_pRouting;
+
+        std::thread mHandlerThread;
+        std::atomic_bool mRunning;
     };
 }

@@ -6,6 +6,7 @@
 #include "skylight_time.h"
 
 #include "skylight_message/user_command.hpp"
+#include "skylight_message/trigger.hpp"
 
 
 int main(int argc, char **argv) {
@@ -28,11 +29,23 @@ int main(int argc, char **argv) {
 
     do {
         std::cout << "Command to send to '" << broadcastChannel << "': ";
-        skylight_message::user_command userCommand;
-        std::cin >> userCommand.command;
-        userCommand.timestamp = skylight::Now();
-        messaging.publish(broadcastChannel, &userCommand);
+        std::string userInput;
+        std::getline(std::cin, userInput);
+        if(userInput.empty())
+        {
+            skylight_message::trigger trigger;
+            messaging.publish(broadcastChannel, &trigger);
+        }
+        if(!userInput.empty())
+        {
+            skylight_message::user_command userCommand;
+            userCommand.command = userInput;
+            userCommand.timestamp = skylight::Now();
+            messaging.publish(broadcastChannel, &userCommand);
+        }
     } while (std::cin.get() == '\n');
 
     return 0;
 }
+
+

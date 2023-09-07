@@ -1,3 +1,6 @@
 #config for the effect driver system!
 
 refresh_rate = 50
+leds_per_strip = 400
+channels = 24
+
