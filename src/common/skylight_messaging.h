@@ -51,6 +51,7 @@ namespace skylight {
 
         void Start() {
             Stop();
+            mRunning = true;
             mHandlerThread = std::thread(&skylight::Messaging::HandleMessages, this);
         }
 
@@ -63,7 +64,7 @@ namespace skylight {
     private:
         void LoadMapping() {
 
-            std::shared_ptr<toml::Table> pConfig = GetConfig("topic_config.toml", {"/usr/local/etc/"});
+            std::shared_ptr<toml::Table> pConfig = GetConfig("skylight_topic_config.toml", {"/usr/local/etc/"});
 
             if (!pConfig) {
                 spdlog::error("Could not load lcm config, using none");
@@ -74,7 +75,7 @@ namespace skylight {
 
         void HandleMessages() {
             while (mRunning) {
-                handle();
+                handleTimeout(1000);
             }
         }
 

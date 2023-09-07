@@ -252,18 +252,11 @@ void setup() {
 void loop() {
 
     if (spiRxComplete) {
+
+      Serial.print("timestamp "); Serial.println(millis());
+      
       Serial.print("Data recieved: "); Serial.println(spiRxIdx);
 
-      if(spiRxIdx == channelCount * channelSize * 3)
-      {
-        for(int ledIndex=0; ledIndex<channelCount*channelSize; ledIndex++)
-        {
-           leds.setPixel(ledIndex, spiRx[ledIndex*3], spiRx[ledIndex*3 + 1], spiRx[ledIndex*3 + 2]);
-        }
-        Serial.println("Showing LEDS");
-        leds.show();
-
-      }
       if(spiRxIdx == channelCount)
       {
         bool update = false;
@@ -281,20 +274,27 @@ void loop() {
             update = true;
             channelToPin[channelId] = 0;
             Serial.print("Channel "); Serial.print(channelId); Serial.println(" disabled");
-
           }
 
         }
         if(update)
         {
-          //Serial.println("Updating pin list");
-          //leds = OctoWS2811(channelSize, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz, channelCount, channelToPin);
           leds.begin(channelSize, displayMemory, drawingMemory, WS2811_GRB | WS2811_800kHz, channelCount, channelToPin);
-          //Serial.println("Pin list updated");
-          //while(leds.busy());
-          //Serial.println("leds shown");
-
         }
+      }
+
+      if(spiRxIdx == channelCount * channelSize * 3)
+      {
+        for(int ledIndex=0; ledIndex<channelCount*channelSize; ledIndex++)
+        {
+           leds.setPixel(ledIndex, spiRx[ledIndex*3], spiRx[ledIndex*3 + 1], spiRx[ledIndex*3 + 2]);
+        }
+      }
+
+      if(spiRxIdx == 1)
+      {
+        leds.show();
+        Serial.println("Showing LEDS");
       }
         
       spiRxComplete = 0;

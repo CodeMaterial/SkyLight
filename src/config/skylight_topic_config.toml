@@ -13,6 +13,7 @@
 
 [routing]
 
-"button_17_down" = "user/voice_start"
-"button_17_up" = "user/voice_stop"
-"button_27_down" = ["user/confirm", "user/trigger"]
+"effect_driver/led_buffer" = "gpio/led_buffer"
+"effect_driver/update" = "gpio/update"
+
+"button_27_down" = "effect_driver/test"

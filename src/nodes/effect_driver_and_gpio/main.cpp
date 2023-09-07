@@ -8,11 +8,10 @@ int main(int argc, char **argv) {
     auto gpio = std::make_shared<skylight::GPIO>();
     auto effectDriver = std::make_shared<skylight::EffectDriver>();
 
-    auto bufferPublishOverride = [gpio](const skylight_message::pixel_buffer *pPixelBuffer) {
-        gpio->ReceiveBuffer(pPixelBuffer);
-    };
 
-    effectDriver->RegisterBufferPublishOverride(bufferPublishOverride);
+    effectDriver->RegisterBufferPublishOverride(
+            [gpio](const skylight_message::pixel_buffer *pPixelBuffer) { gpio->ReceiveBuffer(pPixelBuffer); },
+            [gpio]() { gpio->Update(); });
 
     gpio->Start();
     effectDriver->Start();

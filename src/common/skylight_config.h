@@ -8,8 +8,8 @@
 namespace skylight {
 
     inline std::shared_ptr<toml::Table> GetConfig(std::string filename,
-                                                  std::vector<std::filesystem::path> configSearchPaths = {"./", "../",
-                                                                                                          "/usr/local/etc/"}) {
+                                                  std::vector<std::filesystem::path> configSearchPaths = {
+                                                          "/usr/local/etc/"}) {
 
 
         for (std::filesystem::path &searchPath: configSearchPaths) {
@@ -21,7 +21,8 @@ namespace skylight {
             }
         }
 
-        return std::shared_ptr<toml::Table>{};
+        throw std::runtime_error("Failed to find config");
+
     }
 }
 

@@ -14,13 +14,15 @@ bool skylight::SPI::Connect(int chan, int speed, int flags) {
 }
 
 
-void skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *pMsg) {
+bool skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *pMsg) {
 
     char *channelBuff = const_cast<char *>(reinterpret_cast<const char *>(pMsg->enabledChannels));
 
     if (strcmp(channelBuff, mEnabledChannels) != 0) {
         memcpy(mEnabledChannels, channelBuff, 24);
         int spiWriteByteCount = spiWrite(mSpiDevice, mEnabledChannels, 24);
+        if (spiWriteByteCount != 24)
+            return false;
         std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
 
@@ -28,61 +30,76 @@ void skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *p
 
     int spiWriteByteCount = spiWrite(mSpiDevice, charBuffer, 28800);
 
-}
-
-
-skylight::GPIO::~GPIO() {
-    gpioTerminate();
-}
-
-
-bool skylight::GPIO::Connect() {
-    if (!mMessaging.good()) {
-        spdlog::error("led driver system failed to instantiate messaging correctly");
+    if (spiWriteByteCount != 28800)
         return false;
-    }
+
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+    spdlog::info("spi system finished sending buffer to hardware");
+
+    return true;
+
+}
+
+bool skylight::SPI::SendBufferToHardwareAsync(const skylight_message::pixel_buffer *pMsg) {
+
+    spdlog::info("waiting for send thread to be joinable");
+    if (mSendThread.joinable()) mSendThread.join();
+    spdlog::info("spinning up new thread");
+
+    //this is hacky and needs fixing
+    mSendThread = std::thread([this, pMsg]() {
+        skylight_message::pixel_buffer msgCopy;
+        msgCopy.timestamp = pMsg->timestamp;
+        std::copy(std::begin(pMsg->buffer), std::end(pMsg->buffer), std::begin(msgCopy.buffer));
+        std::copy(std::begin(pMsg->enabledChannels), std::end(pMsg->enabledChannels),
+                  std::begin(msgCopy.enabledChannels));
+        SendBufferToHardware(&msgCopy);
+    });
+}
+
+
+bool skylight::SPI::SendUpdateCommand() {
+    char command = '1';
+    char *charBuffer = &command;
+    int spiWriteByteCount = spiWrite(mSpiDevice, charBuffer, 1); // hu "error -1 decoding trigger!!!"
+    if (spiWriteByteCount != 1)
+        return false;
+
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    return true;
+}
+
+skylight::GPIO::GPIO() {
+
+    spdlog::info("gpio system initialising");
 
     if (gpioInitialise() < 0) {
-        spdlog::error("GPIO system failed to initialise pigpio");
-        return false;
+        throw std::runtime_error("gpio system failed to initialise pigpio");
     }
 
     mpConfig = skylight::GetConfig("skylight_gpio.toml");
-
-    if (!mpConfig) {
-        spdlog::error("led driver system failed to load config");
-        return false;
-    }
 
     auto [speedOK, speed] = mpConfig->getInt("speed");
     auto [spiDeviceOK, spiDevice] = mpConfig->getInt("spiDevice");
 
     if (!speedOK || !spiDeviceOK) {
-        spdlog::error("led driver system failed to get the spi speed or spiDevice from the config");
-        return false;
+        throw std::runtime_error("gpio system failed to load speed or device from config");
     }
-
 
     if (!mSPI.Connect(static_cast<int>(spiDevice), static_cast<int>(speed))) {
-        spdlog::error("led driver failed to connect to the SPI device");
-        return false;
+        throw std::runtime_error("gpio system failed to connect to the SPI device");
     }
-
-    lcm::Subscription *sub = mMessaging.subscribe("gpio/led_buffer", &GPIO::ReceiveBuffer, this);
-    sub->setQueueCapacity(1);
 
     std::vector<long int> pGPIO_ports = *mpConfig->getArray("GPIO_ports")->getIntVector();
     auto [debounceOk, debounce] = mpConfig->getInt("debounce");
 
-
     if (!debounceOk) {
-        spdlog::error("button system cannot load the debounce value");
-        return false;
+        throw std::runtime_error("gpio system failed to load debounce value from config");
     }
 
     if (pGPIO_ports.empty()) {
-        spdlog::error("button system doesn't have any configured GPIO ports");
-        return false;
+        spdlog::warn("gpio system failed to load pin numbers from config, assuming no buttons registered");
     }
 
     for (long int GPIO_port: pGPIO_ports) {
@@ -93,8 +110,21 @@ bool skylight::GPIO::Connect() {
         gpioSetAlertFuncEx(GPIO_port, &skylight::GPIO::ButtonCallback, static_cast<void *>(&mMessaging));
     }
 
-    return true;
 
+    if (!mMessaging.good()) {
+        throw std::runtime_error("gpio system failed to load messaging");
+    }
+
+    mMessaging.subscribe("gpio/update", &GPIO::Update, this);
+    lcm::Subscription *sub = mMessaging.subscribe("gpio/led_buffer", &GPIO::ReceiveBuffer, this);
+    sub->setQueueCapacity(1);
+
+
+    spdlog::info("gpio system initialised");
+}
+
+skylight::GPIO::~GPIO() {
+    gpioTerminate();
 }
 
 
@@ -105,16 +135,33 @@ void skylight::GPIO::ButtonCallback(int gpioPin, int level, unsigned int tick, v
     static_cast<skylight::Messaging *>(messaging)->publish(channel, &button_press);
 }
 
-bool skylight::GPIO::Start() {
+void skylight::GPIO::Start() {
+    spdlog::info("gpio system starting");
     mMessaging.Start();
-    return true;
+}
+
+
+void skylight::GPIO::Update() {
+    spdlog::info("gpio system sending update to SPI hardware");
+    if (!mSPI.SendUpdateCommand()) {
+        spdlog::error("gpio system failed to send update command");
+    }
+}
+
+void skylight::GPIO::Update(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                            const skylight_message::trigger *msg) {
+    spdlog::info("gpio system received update command");
+    Update();
 }
 
 void skylight::GPIO::ReceiveBuffer(const skylight_message::pixel_buffer *pMsg) {
-    mSPI.SendBufferToHardware(pMsg);
+    spdlog::info("gpio system received buffer");
+
+    mSPI.SendBufferToHardwareAsync(pMsg);
+
 }
 
 void skylight::GPIO::ReceiveBuffer(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                                    const skylight_message::pixel_buffer *pMsg) {
-    mSPI.SendBufferToHardware(pMsg);
+    ReceiveBuffer(pMsg);
 }

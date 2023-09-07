@@ -2,67 +2,133 @@
 #include "spdlog/spdlog.h"
 
 skylight::EffectDriver::EffectDriver() {
-    spdlog::info("this is the effect driver initialiser");
-}
+    spdlog::info("Effect driver connecting...");
 
-skylight::EffectDriver::~EffectDriver() {
-    spdlog::info("this is the effect driver destructor");
-}
-
-bool skylight::EffectDriver::Connect() {
+    // lets set everything up and grab the basic things from the config
 
     if (!mMessaging.good()) {
-        spdlog::error("effect driver failed to initialise messaging");
-        return false;
+        throw std::runtime_error("effect driver failed to start the messaging system");
     }
 
     mpConfig = skylight::GetConfig("skylight_effect_driver.toml");
 
-    if (!mpConfig) {
-        spdlog::error("effect driver failed to read config");
-        return false;
+    auto [ledsPerStripValid, mLedsPerStrip] = mpConfig->getInt("leds_per_strip");
+    auto [channelCountValid, mChannelCount] = mpConfig->getInt("channels");
+
+    if (!ledsPerStripValid || !channelCountValid) {
+        throw std::runtime_error("effect driver failed to read the leds_per_strip or channels");
     }
+
+    auto [refreshRateValid, refreshRate] = mpConfig->getInt("refresh_rate");
+    if (!refreshRateValid) {
+        throw std::runtime_error("effect driver failed to read the refresh_rate ");
+    }
+
+    mDelay = std::chrono::microseconds(1'000'000 / refreshRate);
+
+    // clear the buffers
+
+    std::fill(std::begin(mBuffer.buffer), std::begin(mBuffer.buffer) + mLedsPerStrip * mChannelCount * 3, 0);
+
+    std::fill(std::begin(mBuffer.enabledChannels), std::begin(mBuffer.enabledChannels) + mChannelCount, 1);
+
+    // subscribe to everything we need to
 
     mMessaging.subscribe("effect_driver/effects/test/start", &EffectDriver::TestEffect, this);
 
-    auto [ledsPerStripValid, ledsPerStrip] = mpConfig->getInt("leds_per_strip");
-    auto [channelCountValid, channelCount] = mpConfig->getInt("channels");
+    // and we're done!
 
-    if (!ledsPerStripValid || !channelCountValid) {
-        spdlog::error("effect driver failed to read the leds_per_strip or channels");
-        return false;
-    }
-
-    std::fill(std::begin(mBuffer.buffer), std::begin(mBuffer.buffer) + ledsPerStrip * channelCount * 3, 0);
-
-    std::fill(std::begin(mBuffer.enabledChannels), std::begin(mBuffer.enabledChannels) + channelCount, 1);
-
-    return true;
+    spdlog::info("Effect driver connected...");
 }
 
-bool skylight::EffectDriver::Start() {
+skylight::EffectDriver::~EffectDriver() {
+}
+
+void skylight::EffectDriver::Start() {
     mMessaging.Start();
-    return true;
 }
 
 void skylight::EffectDriver::RegisterBufferPublishOverride(
-        std::function<void(const skylight_message::pixel_buffer *)> bufferOverrideFunc) {
+        std::function<void(const skylight_message::pixel_buffer *)> bufferOverrideFunc,
+        std::function<void()> updateOverrideFunc) {
+    spdlog::info("registering hardware publishing overrides");
     mBufferOverrideFunc = bufferOverrideFunc;
+    mUpdateOverrideFunc = updateOverrideFunc;
 }
 
 
 void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                                         const skylight_message::trigger *msg) {
 
+    spdlog::info("Starting test effect");
+
+    std::chrono::time_point effectStart = std::chrono::steady_clock::now();
+    std::chrono::time_point effectEnd = effectStart + std::chrono::seconds(2);
+
+    auto [refreshRateValid, refreshRate] = mpConfig->getInt("refresh_rate");
+    if (!refreshRateValid) return;
+
+    mNextFrameTimestamp = effectStart;
+
+    while (mNextFrameTimestamp < effectEnd) {
+        // do stuff to the buffer here referencing mNextFrameTimestamp for the "send" time
+        {
+            std::chrono::duration timeSinceStart = mNextFrameTimestamp - effectStart;
+            int msSinceStart = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceStart).count();
+            spdlog::info("ms since start {}", msSinceStart);
+            mBuffer.buffer[msSinceStart] = 255;
+        }
+
+        PublishLedBuffer();
+        WaitUntilNextFrame();
+        UpdateLedBuffer();
+    }
+    BlackNow();
+
+    spdlog::info("test effect stopped");
 
 }
 
 bool skylight::EffectDriver::PublishLedBuffer() {
+
     //if we've got a copy of the gpio lib, send the effect straight to the spi buffer
     if (mBufferOverrideFunc) {
         mBufferOverrideFunc(&mBuffer);
     }
 
-    mMessaging.publish("effect_driver/led_buffer", &mBuffer);
+    if (!mBufferOverrideFunc) {
+        mMessaging.publish("effect_driver/led_buffer", &mBuffer);
+    }
+
+    spdlog::info("led buffer published");
+
     return true;
+}
+
+bool skylight::EffectDriver::UpdateLedBuffer() {
+    if (mUpdateOverrideFunc) {
+        mUpdateOverrideFunc();
+    }
+
+    if (!mUpdateOverrideFunc) {
+        mMessaging.publish("effect_driver/update", &mBuffer);
+    }
+
+    spdlog::info("led buffer update published");
+
+    return true;
+}
+
+void skylight::EffectDriver::BlackNow() {
+    spdlog::info("setting leds to black");
+    std::fill(std::begin(mBuffer.enabledChannels), std::begin(mBuffer.enabledChannels) + mChannelCount, 1);
+    PublishLedBuffer();
+    UpdateLedBuffer();
+}
+
+void skylight::EffectDriver::WaitUntilNextFrame() {
+    spdlog::info("waiting for next frame");
+    std::this_thread::sleep_until(mNextFrameTimestamp - std::chrono::milliseconds(1)); // sleepy wait
+    while (std::chrono::steady_clock::now() < mNextFrameTimestamp); // busy wait
+    mNextFrameTimestamp = std::chrono::steady_clock::now() + mDelay;
 }

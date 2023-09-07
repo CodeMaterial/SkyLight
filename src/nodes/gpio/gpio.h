@@ -2,6 +2,7 @@
 
 #include "skylight_messaging.h"
 #include "skylight_message/pixel_buffer.hpp"
+#include "skylight_message/trigger.hpp"
 
 namespace skylight {
 
@@ -13,32 +14,41 @@ namespace skylight {
 
         bool Connect(int chan, int speed, int flags = 0);
 
-        void SendBufferToHardware(const skylight_message::pixel_buffer *msg);
+        bool SendBufferToHardware(const skylight_message::pixel_buffer *msg);
+
+        bool SendBufferToHardwareAsync(const skylight_message::pixel_buffer *msg);
+
+        bool SendUpdateCommand();
 
     private:
         int mSpiDevice;
         char mEnabledChannels[24];
+        std::thread mSendThread;
     };
 
 
     class GPIO {
     public:
-        GPIO() = default;
+        GPIO();
 
         ~GPIO();
 
-        bool Connect();
+        void Start();
 
-        bool Start();
+        void ReceiveBuffer(const skylight_message::pixel_buffer *msg);
+
+        void Update();
+
+    private:
+
+        static void ButtonCallback(int gpioPin, int level, unsigned int tick, void *messaging);
 
         void ReceiveBuffer(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                            const skylight_message::pixel_buffer *msg);
 
-        void ReceiveBuffer(const skylight_message::pixel_buffer *msg);
+        void Update(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                    const skylight_message::trigger *msg);
 
-        static void ButtonCallback(int gpioPin, int level, unsigned int tick, void *messaging);
-
-    private:
         skylight::Messaging mMessaging;
         std::shared_ptr<toml::Table> mpConfig;
         SPI mSPI;
