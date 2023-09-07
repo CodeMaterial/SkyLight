@@ -68,5 +68,8 @@ install(TARGETS ${PROJECT_NAME}
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
         DESTINATION /etc/systemd/system)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/skylight_effect_driver.toml
+install(FILES ../effect_driver/skylight_effect_driver.toml
+        DESTINATION /usr/local/etc)
+
+install(FILES ../gpio/skylight_gpio.toml
         DESTINATION /usr/local/etc)
