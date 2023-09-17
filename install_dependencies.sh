@@ -3,7 +3,7 @@
 # ensure that if anything fails then return an error code
 set -ev
 
-sudo apt-get -y install git cmake build-essential libglib2.0-dev python3-dev valgrind libfmt-dev
+sudo apt-get -y install git cmake build-essential libglib2.0-dev python3-dev valgrind libfmt-dev pigpio
 
 sudo rm -rf dependencies
 mkdir dependencies && cd dependencies

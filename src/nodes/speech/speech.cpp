@@ -31,6 +31,8 @@ skylight::Speech::~Speech() {
 }
 
 bool skylight::Speech::Connect(std::string audioDevice) {
+
+    spdlog::info("connecting to {}", audioDevice);
     static const arg_t cont_args_def[] = {POCKETSPHINX_OPTIONS,
                                           {"-adcdev", ARG_STRING, NULL, "Name of audio device to use for input."},
                                           CMDLN_EMPTY_OPTION};

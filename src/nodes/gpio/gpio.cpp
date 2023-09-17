@@ -92,7 +92,7 @@ skylight::GPIO::GPIO() {
         throw std::runtime_error("gpio system failed to connect to the SPI device");
     }
 
-    std::vector<long int> pGPIO_ports = *mpConfig->getArray("GPIO_ports")->getIntVector();
+    std::vector<long long int> pGPIO_ports = *mpConfig->getArray("GPIO_ports")->getIntVector();
     auto [debounceOk, debounce] = mpConfig->getInt("debounce");
 
     if (!debounceOk) {
@@ -103,7 +103,7 @@ skylight::GPIO::GPIO() {
         spdlog::warn("gpio system failed to load pin numbers from config, assuming no buttons registered");
     }
 
-    for (long int GPIO_port: pGPIO_ports) {
+    for (long long int GPIO_port: pGPIO_ports) {
         spdlog::info("button system setting up gpio port {} with debounce of {}", GPIO_port, debounce);
         gpioSetMode(GPIO_port, PI_INPUT);
         gpioSetPullUpDown(GPIO_port, PI_PUD_UP);
