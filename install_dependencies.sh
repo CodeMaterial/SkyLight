@@ -36,6 +36,36 @@ sudo apt-get -y install libspdlog-dev ||
   cd ..
 }
 
+#right okay. What we're gonna do here is install an old version of sphinxbase and pocketsphinx.
+#this should really be updated to the new version of pocketsphinx. but can I get it to work, can I hell.
+#so this janky nastyness is here for now.
+#TODO - not this
+
+#install sphinxbase / pocketsphinx dependencies
+sudo apt-get install gcc automake autoconf libtool bison swig python-dev libasound2-dev
+
+#install sphinxbase
+git clone https://github.com/cmusphinx/sphinxbase
+cd sphinxbase
+git checkout `git rev-list -n 1 --before="2022-03-01 00:00" master`
+./autogen.sh
+./configure
+make clean all
+make
+sudo make install
+cd ..
+
+#install pocketsphinx
+git clone https://github.com/cmusphinx/pocketsphinx
+cd pocketsphinx
+git checkout `git rev-list -n 1 --before="2022-03-01 00:00" master`
+./autogen.sh
+./configure
+make clean all
+make
+sudo make install
+cd ..
+
 cd ..
 
 sudo rm -rf dependencies

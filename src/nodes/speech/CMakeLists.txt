@@ -13,18 +13,21 @@ lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
         ${SKYLIGHT_ROOT}/src/message_types/user_command.lcm
         ${SKYLIGHT_ROOT}/src/message_types/trigger.lcm
-
 )
 
 lcm_add_library(${PROJECT_NAME}_messages CPP ${${PROJECT_NAME}_headers})
 
 target_include_directories(${PROJECT_NAME}_messages INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-        ${SKYLIGHT_ROOT}/src/common)
+        ${SKYLIGHT_ROOT}/src/common
+        /usr/local/include/sphinxbase
+        /usr/local/include/pocketsphinx  # this, nor the line above, should not be needed, but here we are...
+        )
 
 
-add_executable(${PROJECT_NAME} main.cpp)
-lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog pocketsphinx)
+add_executable(${PROJECT_NAME} main.cpp speech.cpp speechNode.cpp)
+
+lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog pocketsphinx sphinxbase sphinxad)
 
 configure_file(${SKYLIGHT_ROOT}/src/config/service_template.service ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service)
 
@@ -33,3 +36,6 @@ install(TARGETS ${PROJECT_NAME}
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
         DESTINATION /etc/systemd/system)
+
+install(FILES skylight_speech.toml
+        DESTINATION /usr/local/etc)

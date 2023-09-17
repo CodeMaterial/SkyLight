@@ -5,7 +5,10 @@
 #include "spdlog/spdlog.h"
 #include <filesystem>
 
+
 namespace skylight {
+
+    typedef std::shared_ptr<toml::Table> Config;
 
     inline std::shared_ptr<toml::Table> GetConfig(std::string filename,
                                                   std::vector<std::filesystem::path> configSearchPaths = {
