@@ -6,6 +6,4 @@ add_subdirectory(src/nodes/cli)
 add_subdirectory(src/nodes/gpio)
 add_subdirectory(src/nodes/effect_driver)
 add_subdirectory(src/nodes/effect_driver_and_gpio)
-
-install(FILES src/config/skylight_topic_config.toml
-        DESTINATION /usr/local/etc)
+add_subdirectory(src/nodes/speech)

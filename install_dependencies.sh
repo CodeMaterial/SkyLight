@@ -42,7 +42,7 @@ sudo apt-get -y install libspdlog-dev ||
 #TODO - not this
 
 #install sphinxbase / pocketsphinx dependencies
-sudo apt-get install gcc automake autoconf libtool bison swig python-dev libasound2-dev
+sudo apt-get -y install gcc automake autoconf libtool bison swig python-dev libasound2-dev
 
 #install sphinxbase
 git clone https://github.com/cmusphinx/sphinxbase
