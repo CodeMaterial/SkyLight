@@ -1,4 +1,4 @@
-#include "soundNode.h"
+#include "sound_node.h"
 #include <exception>
 
 skylight::SoundNode::SoundNode(std::string name) {

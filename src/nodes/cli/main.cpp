@@ -6,6 +6,8 @@
 
 #include "skylight_message/simple_void.hpp"
 #include "skylight_message/simple_string.hpp"
+#include "skylight_message/simple_float.hpp"
+
 #include <stdexcept>
 
 
@@ -14,12 +16,14 @@ int main(int argc, char **argv) {
     CLI::App app{"App description"};
 
     std::string broadcastChannel;
-    bool trigger;
-    std::string commandString = "";
+    app.add_option("-c,--channel", broadcastChannel,
+                   "The channel to broadcast on, sends a simple_void message if no other arguments are used")->required();
 
-    app.add_option("-c,--channel", broadcastChannel, "The channel to broadcast the command")->required();
+    std::string simpleStringValue;
+    CLI::Option *simpleStringOption = app.add_option("-s, --string", simpleStringValue, "send a simple_string message");
 
-    app.add_option("-s, --string", commandString, "send a string command");
+    float simpleFloatValue;
+    CLI::Option *simpleFloatOption = app.add_option("-f, --float", simpleFloatValue, "send a simple_float message");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -29,16 +33,22 @@ int main(int argc, char **argv) {
         throw std::runtime_error("cli system failed to start the messaging system");
     }
 
-    if (commandString.empty()) {
-        skylight_message::simple_void trigger;
-        spdlog::info("Sending trigger to {}", broadcastChannel);
-        messaging.publish(broadcastChannel, &trigger);
-    }
-    if (!commandString.empty()) {
-        skylight_message::simple_string stringCommand;
-        stringCommand.data = commandString;
-        spdlog::info("Sending user command {} to {}", commandString, broadcastChannel);
-        messaging.publish(broadcastChannel, &stringCommand);
+    if (simpleStringOption) {
+        spdlog::info("skylight cli sending simple_string message \"{}\" to {}", simpleStringValue, broadcastChannel);
+        skylight_message::simple_string simpleStringMessage;
+        simpleStringMessage.data = simpleStringValue;
+        messaging.publish(broadcastChannel, &simpleStringMessage);
+
+    } else if (simpleFloatOption) {
+        spdlog::info("skylight cli sending simple_float message {} to {}", simpleFloatValue, broadcastChannel);
+        skylight_message::simple_float simpleFloatMessage;
+        simpleFloatMessage.data = simpleFloatValue;
+        messaging.publish(broadcastChannel, &simpleFloatMessage);
+
+    } else {
+        spdlog::info("skylight cli sending simple_void message to {}", broadcastChannel);
+        skylight_message::simple_void simpleVoidMessage;
+        messaging.publish(broadcastChannel, &simpleVoidMessage);
     }
 
     return 0;

@@ -1,14 +1,15 @@
 #include "effect_driver.h"
 #include "spdlog/spdlog.h"
 
-skylight::EffectDriver::EffectDriver() {
+skylight::EffectDriver::EffectDriver(std::function<void(const skylight_message::pixel_buffer *)> onBuffer,
+                                     std::function<void()> onUpdate) {
+
+    mOnBuffer = onBuffer;
+    mOnUpdate = onUpdate;
+
     spdlog::info("Effect driver connecting...");
 
     // lets set everything up and grab the basic things from the config
-
-    if (!mMessaging.good()) {
-        throw std::runtime_error("effect driver failed to start the messaging system");
-    }
 
     mpConfig = skylight::GetConfig("skylight_effect_driver.toml");
 
@@ -39,7 +40,6 @@ skylight::EffectDriver::EffectDriver() {
 
     // subscribe to everything we need to
 
-    mMessaging.subscribe("effect_driver/effects/test/start", &EffectDriver::TestEffect, this);
 
     // and we're done!
 
@@ -47,18 +47,6 @@ skylight::EffectDriver::EffectDriver() {
 }
 
 skylight::EffectDriver::~EffectDriver() {
-}
-
-void skylight::EffectDriver::Start() {
-    mMessaging.Start();
-}
-
-void skylight::EffectDriver::RegisterBufferPublishOverride(
-        std::function<void(const skylight_message::pixel_buffer *)> bufferOverrideFunc,
-        std::function<void()> updateOverrideFunc) {
-    spdlog::info("registering hardware publishing overrides");
-    mBufferOverrideFunc = bufferOverrideFunc;
-    mUpdateOverrideFunc = updateOverrideFunc;
 }
 
 
@@ -102,28 +90,15 @@ void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const st
 
 bool skylight::EffectDriver::PublishLedBuffer() {
 
-    //if we've got a copy of the gpio lib, send the effect straight to the spi buffer
-    if (mBufferOverrideFunc) {
-        mBufferOverrideFunc(&mBuffer);
-    }
-
-    if (!mBufferOverrideFunc) {
-        mMessaging.publish("effect_driver/led_buffer", &mBuffer);
-    }
-
+    mOnBuffer(&mBuffer);
     spdlog::info("led buffer published");
 
     return true;
 }
 
 bool skylight::EffectDriver::UpdateLedBuffer() {
-    if (mUpdateOverrideFunc) {
-        mUpdateOverrideFunc();
-    }
 
-    if (!mUpdateOverrideFunc) {
-        mMessaging.publish("effect_driver/update", &mBuffer);
-    }
+    mOnUpdate();
 
     spdlog::info("led buffer update published");
 

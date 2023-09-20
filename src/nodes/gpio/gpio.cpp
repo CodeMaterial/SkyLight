@@ -41,25 +41,6 @@ bool skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *p
 
 }
 
-// this threaded version is //very// broken, needs fixing
-bool skylight::SPI::SendBufferToHardwareAsync(const skylight_message::pixel_buffer *pMsg) {
-
-    spdlog::info("waiting for send thread to be joinable");
-    if (mSendThread.joinable()) mSendThread.join();
-    spdlog::info("spinning up new thread");
-
-    //this is hacky and needs fixing
-    mSendThread = std::thread([this, pMsg]() {
-        skylight_message::pixel_buffer msgCopy;
-        msgCopy.timestamp = pMsg->timestamp;
-        std::copy(std::begin(pMsg->buffer), std::end(pMsg->buffer), std::begin(msgCopy.buffer));
-        std::copy(std::begin(pMsg->enabledChannels), std::end(pMsg->enabledChannels),
-                  std::begin(msgCopy.enabledChannels));
-        SendBufferToHardware(&msgCopy);
-    });
-}
-
-
 bool skylight::SPI::SendUpdateCommand() {
     char command = '1';
     char *charBuffer = &command;
@@ -71,7 +52,7 @@ bool skylight::SPI::SendUpdateCommand() {
     return true;
 }
 
-skylight::GPIO::GPIO() {
+skylight::GPIO::GPIO(gpioAlertFuncEx_t buttonCallback, void *buttonCallbackContext) {
 
     spdlog::info("gpio system initialising");
 
@@ -108,37 +89,13 @@ skylight::GPIO::GPIO() {
         gpioSetMode(GPIO_port, PI_INPUT);
         gpioSetPullUpDown(GPIO_port, PI_PUD_UP);
         gpioGlitchFilter(GPIO_port, debounce);
-        gpioSetAlertFuncEx(GPIO_port, &skylight::GPIO::ButtonCallback, static_cast<void *>(&mMessaging));
+        gpioSetAlertFuncEx(GPIO_port, buttonCallback, buttonCallbackContext);
     }
-
-
-    if (!mMessaging.good()) {
-        throw std::runtime_error("gpio system failed to load messaging");
-    }
-
-    mMessaging.subscribe("gpio/update", &GPIO::Update, this);
-    lcm::Subscription *sub = mMessaging.subscribe("gpio/led_buffer", &GPIO::ReceiveBuffer, this);
-    sub->setQueueCapacity(1);
-
-
     spdlog::info("gpio system initialised");
 }
 
 skylight::GPIO::~GPIO() {
     gpioTerminate();
-}
-
-
-void skylight::GPIO::ButtonCallback(int gpioPin, int level, unsigned int tick, void *messaging) {
-    spdlog::info("button {} state changed to {}", gpioPin, level);
-    skylight_message::simple_void button_press;
-    std::string channel = fmt::format("gpio/button_{}_{}", gpioPin, level ? "up" : "down");
-    static_cast<skylight::Messaging *>(messaging)->publish(channel, &button_press);
-}
-
-void skylight::GPIO::Start() {
-    spdlog::info("gpio system starting");
-    mMessaging.Start();
 }
 
 
@@ -159,10 +116,4 @@ void skylight::GPIO::ReceiveBuffer(const skylight_message::pixel_buffer *pMsg) {
     spdlog::info("gpio system received buffer");
 
     mSPI.SendBufferToHardware(pMsg);
-
-}
-
-void skylight::GPIO::ReceiveBuffer(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                                   const skylight_message::pixel_buffer *pMsg) {
-    ReceiveBuffer(pMsg);
 }

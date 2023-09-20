@@ -1,6 +1,6 @@
 #include <thread>
 #include <chrono>
-#include "soundNode.h"
+#include "sound_node.h"
 
 int main(int argc, char **argv) {
 

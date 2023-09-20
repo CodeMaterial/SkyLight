@@ -14,6 +14,7 @@ lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
         ${SKYLIGHT_ROOT}/src/message_types/simple_string.lcm
         ${SKYLIGHT_ROOT}/src/message_types/simple_void.lcm
+        ${SKYLIGHT_ROOT}/src/message_types/simple_float.lcm
 
 )
 

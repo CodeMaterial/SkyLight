@@ -11,15 +11,10 @@ namespace skylight {
 
     class EffectDriver {
     public:
-        EffectDriver();
+        EffectDriver(std::function<void(const skylight_message::pixel_buffer *)> onBuffer,
+                     std::function<void()> onUpdate);
 
         ~EffectDriver();
-
-        void Start();
-
-        void
-        RegisterBufferPublishOverride(std::function<void(const skylight_message::pixel_buffer *)> bufferOverrideFunc,
-                                      std::function<void()> updateOverrideFunc);
 
         void
         TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_void *msg);
@@ -34,13 +29,12 @@ namespace skylight {
 
         void WaitUntilNextFrame();
 
-        skylight::Messaging mMessaging;
         std::shared_ptr<toml::Table> mpConfig;
 
         skylight_message::pixel_buffer mBuffer;
 
-        std::function<void(const skylight_message::pixel_buffer *)> mBufferOverrideFunc;
-        std::function<void()> mUpdateOverrideFunc;
+        std::function<void(const skylight_message::pixel_buffer *)> mOnBuffer;
+        std::function<void()> mOnUpdate;
 
         std::chrono::time_point<std::chrono::steady_clock> mNextFrameTimestamp;
 

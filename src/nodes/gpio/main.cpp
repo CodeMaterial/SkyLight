@@ -1,10 +1,8 @@
-#include "gpio.h"
-#include "spdlog/spdlog.h"
+#include "gpio_node.h"
 
 int main(int argc, char **argv) {
-    spdlog::info("this is the gpio main");
-    skylight::GPIO gpio;
-    gpio.Start();
+
+    skylight::GpioNode gpioNode;
 
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

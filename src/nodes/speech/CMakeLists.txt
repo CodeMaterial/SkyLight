@@ -25,7 +25,7 @@ target_include_directories(${PROJECT_NAME}_messages INTERFACE
         )
 
 
-add_executable(${PROJECT_NAME} main.cpp speech.cpp speechNode.cpp)
+add_executable(${PROJECT_NAME} main.cpp speech.cpp speech_node.cpp)
 
 lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog pocketsphinx sphinxbase sphinxad)
 

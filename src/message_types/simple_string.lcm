@@ -1,0 +1,7 @@
+package skylight_message;
+
+struct simple_string
+{
+    int64_t    timestamp;
+    string     data;
+}

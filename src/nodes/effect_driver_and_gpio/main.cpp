@@ -1,20 +1,25 @@
 #include "../effect_driver/effect_driver.h"
-#include "../gpio/gpio.h"
+#include "../effect_driver/effect_driver_node.h"
+#include "../gpio/gpio_node.h"
 #include "spdlog/spdlog.h"
 
 int main(int argc, char **argv) {
     spdlog::info("this is the combined one");
 
-    auto gpio = std::make_shared<skylight::GPIO>();
-    auto effectDriver = std::make_shared<skylight::EffectDriver>();
+    skylight::GpioNode gpioNode;
 
+    auto onBuffer = [&gpioNode](const skylight_message::pixel_buffer *pBuffer) {
+        gpioNode.ReceiveBuffer(nullptr, "", pBuffer);
+    };
 
-    effectDriver->RegisterBufferPublishOverride(
-            [gpio](const skylight_message::pixel_buffer *pPixelBuffer) { gpio->ReceiveBuffer(pPixelBuffer); },
-            [gpio]() { gpio->Update(); });
+    auto onUpdate = [&gpioNode]() {
+        skylight_message::simple_void trigger;
+        gpioNode.Update(nullptr, "", &trigger);
+    };
 
-    gpio->Start();
-    effectDriver->Start();
+    auto pEffectDriver = std::make_shared<skylight::EffectDriver>(onBuffer, onUpdate);
+
+    skylight::EffectDriverNode effectDriverNode(pEffectDriver);
 
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
