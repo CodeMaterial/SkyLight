@@ -47,7 +47,7 @@ include(${LCM_USE_FILE})
 lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
         ${SKYLIGHT_ROOT}/src/message_types/pixel_buffer.lcm
-        ${SKYLIGHT_ROOT}/src/message_types/trigger.lcm
+        ${SKYLIGHT_ROOT}/src/message_types/simple_void.lcm
 )
 
 lcm_add_library(${PROJECT_NAME}_messages CPP ${${PROJECT_NAME}_headers})

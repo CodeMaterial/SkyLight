@@ -3,10 +3,9 @@
 #include "spdlog/spdlog.h"
 
 #include "skylight_messaging.h"
-#include "skylight_time.h"
 
-#include "skylight_message/user_command.hpp"
-#include "skylight_message/trigger.hpp"
+#include "skylight_message/simple_void.hpp"
+#include "skylight_message/simple_string.hpp"
 #include <stdexcept>
 
 
@@ -20,7 +19,7 @@ int main(int argc, char **argv) {
 
     app.add_option("-c,--channel", broadcastChannel, "The channel to broadcast the command")->required();
 
-    app.add_option("-u, --usercommand", commandString, "send a user command");
+    app.add_option("-s, --string", commandString, "send a string command");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -31,15 +30,15 @@ int main(int argc, char **argv) {
     }
 
     if (commandString.empty()) {
-        skylight_message::trigger trigger;
+        skylight_message::simple_void trigger;
         spdlog::info("Sending trigger to {}", broadcastChannel);
         messaging.publish(broadcastChannel, &trigger);
     }
     if (!commandString.empty()) {
-        skylight_message::user_command userCommand;
-        userCommand.command = commandString;
+        skylight_message::simple_string stringCommand;
+        stringCommand.data = commandString;
         spdlog::info("Sending user command {} to {}", commandString, broadcastChannel);
-        messaging.publish(broadcastChannel, &userCommand);
+        messaging.publish(broadcastChannel, &stringCommand);
     }
 
     return 0;

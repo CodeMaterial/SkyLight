@@ -1,4 +1,3 @@
-#include <spdlog/spdlog.h>
 #include "speechNode.h"
 
 int main(int argc, char *argv[]) {

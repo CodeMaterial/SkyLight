@@ -1,6 +1,6 @@
 package skylight_message;
 
-struct trigger
+struct simple_void
 {
     int64_t    timestamp;
 }

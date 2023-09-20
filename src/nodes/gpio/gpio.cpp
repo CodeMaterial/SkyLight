@@ -1,7 +1,7 @@
 #include "gpio.h"
 #include "spdlog/spdlog.h"
 #include "pigpio.h"
-#include "skylight_message/trigger.hpp"
+#include "skylight_message/simple_void.hpp"
 
 
 skylight::SPI::~SPI() {
@@ -131,7 +131,7 @@ skylight::GPIO::~GPIO() {
 
 void skylight::GPIO::ButtonCallback(int gpioPin, int level, unsigned int tick, void *messaging) {
     spdlog::info("button {} state changed to {}", gpioPin, level);
-    skylight_message::trigger button_press;
+    skylight_message::simple_void button_press;
     std::string channel = fmt::format("gpio/button_{}_{}", gpioPin, level ? "up" : "down");
     static_cast<skylight::Messaging *>(messaging)->publish(channel, &button_press);
 }
@@ -150,7 +150,7 @@ void skylight::GPIO::Update() {
 }
 
 void skylight::GPIO::Update(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                            const skylight_message::trigger *msg) {
+                            const skylight_message::simple_void *msg) {
     spdlog::info("gpio system received update command");
     Update();
 }

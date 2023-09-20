@@ -1,0 +1,13 @@
+#sound conifg
+
+[external]
+enabled = 1
+card = "sndrpihifiberry"
+volume_control = "SoftMaster"
+default_volume = 0.5
+
+[internal]
+enabled = 1
+card = "Device"
+volume_control = "Speaker"
+default_volume = 0.5

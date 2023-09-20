@@ -27,6 +27,34 @@ namespace skylight {
         throw std::runtime_error("Failed to find config");
 
     }
+
+    // some wrappers to make this less gross
+
+    inline int64_t getConfigInt(Config config, std::string key) {
+        auto [ok, value] = config->getInt(key);
+        if (!ok) {
+            throw std::runtime_error("failed to read key from file");
+        }
+        return value;
+    }
+
+    inline double getConfigDouble(Config config, std::string key) {
+        auto [ok, value] = config->getDouble(key);
+        if (!ok) {
+            throw std::runtime_error("failed to read key from file");
+        }
+        return value;
+    }
+
+    inline std::string getConfigString(Config config, std::string key) {
+        auto [ok, value] = config->getString(key);
+        if (!ok) {
+            throw std::runtime_error("failed to read key from file");
+        }
+        return value;
+    }
+
+
 }
 
 

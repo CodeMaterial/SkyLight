@@ -1,7 +1,7 @@
 package skylight_message;
 
-struct user_command
+struct simple_float
 {
     int64_t    timestamp;
-    string      command;
+    float      data;
 }

@@ -4,7 +4,7 @@
 #include <functional>
 #include <chrono>
 #include "skylight_messaging.h"
-#include "skylight_message/trigger.hpp"
+#include "skylight_message/simple_void.hpp"
 #include "skylight_message/pixel_buffer.hpp"
 
 namespace skylight {
@@ -21,7 +21,8 @@ namespace skylight {
         RegisterBufferPublishOverride(std::function<void(const skylight_message::pixel_buffer *)> bufferOverrideFunc,
                                       std::function<void()> updateOverrideFunc);
 
-        void TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::trigger *msg);
+        void
+        TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_void *msg);
 
         bool PublishLedBuffer();
 

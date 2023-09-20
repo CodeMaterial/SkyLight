@@ -63,7 +63,7 @@ void skylight::EffectDriver::RegisterBufferPublishOverride(
 
 
 void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                                        const skylight_message::trigger *msg) {
+                                        const skylight_message::simple_void *msg) {
 
     spdlog::info("Starting test effect");
 

@@ -3,7 +3,7 @@
 # ensure that if anything fails then return an error code
 set -ev
 
-sudo apt-get -y install git cmake build-essential libglib2.0-dev python3-dev valgrind libfmt-dev pigpio
+sudo apt-get -y install git cmake build-essential libglib2.0-dev python3-dev valgrind libfmt-dev pigpio sox espeak
 
 sudo rm -rf dependencies
 mkdir dependencies && cd dependencies
@@ -47,7 +47,7 @@ sudo apt-get -y install gcc automake autoconf libtool bison swig python-dev liba
 #install sphinxbase
 git clone https://github.com/cmusphinx/sphinxbase
 cd sphinxbase
-git checkout `git rev-list -n 1 --before="2022-03-01 00:00" master`
+git checkout "git rev-list -n 1 --before=\"2022-03-01 00:00\" master"
 ./autogen.sh
 ./configure
 make clean all
@@ -58,7 +58,7 @@ cd ..
 #install pocketsphinx
 git clone https://github.com/cmusphinx/pocketsphinx
 cd pocketsphinx
-git checkout `git rev-list -n 1 --before="2022-03-01 00:00" master`
+git checkout "git rev-list -n 1 --before=\"2022-03-01 00:00\" master"
 ./autogen.sh
 ./configure
 make clean all
@@ -66,6 +66,13 @@ make
 sudo make install
 cd ..
 
-cd ..
 
+# enable the audio-shim, if you install multiple times, this will keep appending
+echo 'dtoverlay=hifiberry-dac' | sudo tee --append /boot/config.txt
+
+#setup softvol for audio-shim
+echo "pcm.softvol{type softvol slave {pcm \"default\"} control {name \"SoftMaster\" card 0}}" | sudo tee /etc/asound.conf
+
+#And we're done! cleanup time!
+cd ..
 sudo rm -rf dependencies

@@ -1,6 +1,6 @@
 #include "speechNode.h"
-#include "skylight_message/user_command.hpp"
-#include "skylight_message/trigger.hpp"
+#include "skylight_message/simple_string.hpp"
+#include "skylight_message/simple_void.hpp"
 
 skylight::SpeechNode::SpeechNode() {
 
@@ -32,19 +32,19 @@ skylight::SpeechNode::~SpeechNode() {
 }
 
 void skylight::SpeechNode::OnStart(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                                   const skylight_message::trigger *msg) {
+                                   const skylight_message::simple_void *msg) {
     spdlog::info("starting speech recognition");
     mSpeech.Start();
 
 }
 
 void skylight::SpeechNode::OnStop(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                                  const skylight_message::trigger *msg) {
+                                  const skylight_message::simple_void *msg) {
     spdlog::info("stopping speech recognition");
-    skylight_message::user_command userCommand;
+    skylight_message::simple_string userCommand;
     std::string speechDetected = mSpeech.Stop();
     if (!speechDetected.empty()) {
-        userCommand.command = speechDetected;
+        userCommand.data = speechDetected;
         spdlog::info("speech detected: {}", speechDetected);
         mMessaging.publish("speech/command", &userCommand);
     }
