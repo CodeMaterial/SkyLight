@@ -13,7 +13,7 @@
 
 [routing]
 
-"effect_driver/led_buffer" = "gpio/led_buffer"
-"effect_driver/update" = "gpio/update"
+"/effect_driver/led_buffer" = "/gpio/led_buffer"
+"/effect_driver/update" = "/gpio/update"
 
-"button_27_down" = "effect_driver/test"
+"/gpio/button_27/down" = "/effect_driver/test"

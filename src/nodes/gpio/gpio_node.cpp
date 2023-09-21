@@ -36,6 +36,6 @@ void skylight::GpioNode::OnButton(int gpioPin, int level, uint32_t tick, void *c
 
     spdlog::info("skylight gpio node button {} state changed to {}", gpioPin, level);
     skylight_message::simple_void button_press;
-    std::string channel = fmt::format("gpio/button_{}/{}", gpioPin, level ? "up" : "down");
+    std::string channel = fmt::format("/gpio/button_{}/{}", gpioPin, level ? "up" : "down");
     pGpioNode->mMessaging.publish(channel, &button_press);
 }
