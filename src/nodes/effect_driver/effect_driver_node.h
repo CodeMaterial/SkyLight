@@ -10,10 +10,8 @@ namespace skylight {
 
         ~EffectDriverNode();
         
-
-        std::shared_ptr<skylight::EffectDriver> mpEffectDriver;
-
     private:
+        std::shared_ptr<skylight::EffectDriver> mpEffectDriver;
         skylight::Messaging mMessaging;
     };
 }

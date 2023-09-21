@@ -6,19 +6,17 @@ namespace skylight {
 
     class Sound {
     public:
-        Sound();
+        Sound(std::string card, std::string volumeControl, float volume);
 
         ~Sound();
-
-        bool Connect(std::string card, std::string volumeControl, float volume);
 
         void PlayAudio(std::string filename);
 
         void Say(std::string message);
 
-        bool StopAll();
+        void StopAll();
 
-        bool SetVolume(float volume);
+        void SetVolume(float volume);
 
         float GetVolume();
 

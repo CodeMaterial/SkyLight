@@ -4,7 +4,8 @@
 #include "spdlog/spdlog.h"
 
 int main(int argc, char **argv) {
-    spdlog::info("this is the combined one");
+
+    spdlog::info("skylight effect driver and gpio node starting");
 
     skylight::GpioNode gpioNode;
 
@@ -21,9 +22,9 @@ int main(int argc, char **argv) {
 
     skylight::EffectDriverNode effectDriverNode(pEffectDriver);
 
+    spdlog::info("skylight effect driver and gpio node started");
+
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-
-
 }

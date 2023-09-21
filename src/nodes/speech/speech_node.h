@@ -4,6 +4,7 @@
 #include "skylight_messaging.h"
 #include "skylight_config.h"
 #include "skylight_message/simple_void.hpp"
+#include "skylight_message/simple_string.hpp"
 
 
 namespace skylight {
@@ -14,6 +15,9 @@ namespace skylight {
 
         ~SpeechNode();
 
+        void
+        SetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_string *msg);
+
     private:
 
         void
@@ -22,7 +26,6 @@ namespace skylight {
         void OnStop(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_void *msg);
 
         skylight::Messaging mMessaging;
-        skylight::Config mConfig;
-        Speech mSpeech;
+        std::shared_ptr<Speech> mpSpeech;
     };
 }

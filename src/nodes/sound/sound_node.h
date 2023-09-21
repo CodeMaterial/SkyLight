@@ -25,7 +25,7 @@ namespace skylight {
 
     private:
 
-        Sound mSound;
+        std::shared_ptr<Sound> mpSound;
         std::string mName;
         skylight::Messaging mMessaging;
     };

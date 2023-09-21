@@ -5,14 +5,13 @@
 skylight::GpioNode::GpioNode() {
 
     if (!mMessaging.good()) {
-        throw std::runtime_error("gpio node failed to start messaging correctly");
+        throw std::runtime_error("skylight gpio node failed to start messaging correctly");
     }
 
     mpGpio = std::make_shared<skylight::GPIO>(skylight::GpioNode::OnButton, this);
 
-
-    mMessaging.subscribe("gpio/update", &GpioNode::Update, this);
-    mMessaging.subscribe("gpio/led_buffer", &GpioNode::ReceiveBuffer, this)->setQueueCapacity(1);
+    mMessaging.subscribe("/gpio/update", &GpioNode::Update, this);
+    mMessaging.subscribe("/gpio/led_buffer", &GpioNode::ReceiveBuffer, this)->setQueueCapacity(1);
 
     mMessaging.Start();
 }
@@ -35,7 +34,7 @@ void skylight::GpioNode::OnButton(int gpioPin, int level, uint32_t tick, void *c
 
     skylight::GpioNode *pGpioNode = static_cast<skylight::GpioNode *>(context);
 
-    spdlog::info("button {} state changed to {}", gpioPin, level);
+    spdlog::info("skylight gpio node button {} state changed to {}", gpioPin, level);
     skylight_message::simple_void button_press;
     std::string channel = fmt::format("gpio/button_{}/{}", gpioPin, level ? "up" : "down");
     pGpioNode->mMessaging.publish(channel, &button_press);

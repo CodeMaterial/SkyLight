@@ -1,7 +1,7 @@
-#config for the led driver system!
+#config for the gpio system
 
-speed = 10000000 #10mhz
-spiDevice = 0
+spi_speed = 10000000 #10mhz for the spi update
+spi_device = 0
 
-GPIO_ports = [17,27]
-debounce = 100 #microseconds
+gpio_ports = [17, 27]
+gpio_debounce = 100 #microseconds

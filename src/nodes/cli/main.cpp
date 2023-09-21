@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv) {
 
-    CLI::App app{"App description"};
+    CLI::App app{"Skylight cli tool"};
 
     std::string broadcastChannel;
     app.add_option("-c,--channel", broadcastChannel,
@@ -30,17 +30,19 @@ int main(int argc, char **argv) {
     skylight::Messaging messaging;
 
     if (!messaging.good()) {
-        throw std::runtime_error("cli system failed to start the messaging system");
+        throw std::runtime_error("skylight cli failed to start the messaging system");
     }
 
-    if (simpleStringOption) {
-        spdlog::info("skylight cli sending simple_string message \"{}\" to {}", simpleStringValue, broadcastChannel);
+    if (simpleStringOption->count() > 0) {
+        spdlog::info("skylight cli sending a simple_string message of \"{}\" to {}", simpleStringValue,
+                     broadcastChannel);
         skylight_message::simple_string simpleStringMessage;
         simpleStringMessage.data = simpleStringValue;
         messaging.publish(broadcastChannel, &simpleStringMessage);
 
-    } else if (simpleFloatOption) {
-        spdlog::info("skylight cli sending simple_float message {} to {}", simpleFloatValue, broadcastChannel);
+    } else if (simpleFloatOption->count() > 0) {
+        spdlog::info("skylight cli sending simple_float message with value {} to {}", simpleFloatValue,
+                     broadcastChannel);
         skylight_message::simple_float simpleFloatMessage;
         simpleFloatMessage.data = simpleFloatValue;
         messaging.publish(broadcastChannel, &simpleFloatMessage);

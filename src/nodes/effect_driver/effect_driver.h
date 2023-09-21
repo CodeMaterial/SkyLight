@@ -3,6 +3,7 @@
 #include <memory>
 #include <functional>
 #include <chrono>
+
 #include "skylight_messaging.h"
 #include "skylight_message/simple_void.hpp"
 #include "skylight_message/pixel_buffer.hpp"
@@ -19,17 +20,15 @@ namespace skylight {
         void
         TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_void *msg);
 
-        bool PublishLedBuffer();
+        void PublishLedBuffer();
 
-        bool UpdateLedBuffer();
+        void UpdateLedBuffer();
 
         void BlackNow();
 
     private:
 
         void WaitUntilNextFrame();
-
-        std::shared_ptr<toml::Table> mpConfig;
 
         skylight_message::pixel_buffer mBuffer;
 

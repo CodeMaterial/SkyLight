@@ -1,88 +1,29 @@
 #include "gpio.h"
 #include "spdlog/spdlog.h"
-#include "pigpio.h"
-#include "skylight_message/simple_void.hpp"
 
-
-skylight::SPI::~SPI() {
-    spiClose(mSpiDevice);
-}
-
-bool skylight::SPI::Connect(int chan, int speed, int flags) {
-    mSpiDevice = spiOpen(chan, speed, flags);
-    return mSpiDevice >= 0;
-}
-
-
-bool skylight::SPI::SendBufferToHardware(const skylight_message::pixel_buffer *pMsg) {
-
-    char *channelBuff = const_cast<char *>(reinterpret_cast<const char *>(pMsg->enabledChannels));
-
-    if (strcmp(channelBuff, mEnabledChannels) != 0) {
-        memcpy(mEnabledChannels, channelBuff, 24);
-        int spiWriteByteCount = spiWrite(mSpiDevice, mEnabledChannels, 24);
-        if (spiWriteByteCount != 24)
-            return false;
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
-    }
-
-    char *charBuffer = const_cast<char *>(reinterpret_cast<const char *>(pMsg->buffer));
-
-    int spiWriteByteCount = spiWrite(mSpiDevice, charBuffer, 28800);
-
-    if (spiWriteByteCount != 28800)
-        return false;
-
-    std::this_thread::sleep_for(std::chrono::microseconds(10));
-
-    spdlog::info("spi system finished sending buffer to hardware");
-
-    return true;
-
-}
-
-bool skylight::SPI::SendUpdateCommand() {
-    char command = '1';
-    char *charBuffer = &command;
-    int spiWriteByteCount = spiWrite(mSpiDevice, charBuffer, 1); // hu "error -1 decoding trigger!!!"
-    if (spiWriteByteCount != 1)
-        return false;
-
-    std::this_thread::sleep_for(std::chrono::microseconds(10));
-    return true;
-}
 
 skylight::GPIO::GPIO(gpioAlertFuncEx_t buttonCallback, void *buttonCallbackContext) {
 
-    spdlog::info("gpio system initialising");
+    spdlog::info("skylight gpio initialising");
 
     if (gpioInitialise() < 0) {
-        throw std::runtime_error("gpio system failed to initialise pigpio");
+        throw std::runtime_error("skylight gpio system failed to initialise pigpio");
     }
 
-    mpConfig = skylight::GetConfig("skylight_gpio.toml");
+    skylight::Config pConfig = skylight::GetConfig("skylight_gpio.toml");
 
-    auto [speedOK, speed] = mpConfig->getInt("speed");
-    auto [spiDeviceOK, spiDevice] = mpConfig->getInt("spiDevice");
+    int speed = skylight::getConfigInt(pConfig, "spi_speed");
+    int spiDevice = skylight::getConfigInt(pConfig, "spi_device");
 
-    if (!speedOK || !spiDeviceOK) {
-        throw std::runtime_error("gpio system failed to load speed or device from config");
-    }
+    mpSPI = std::make_shared<SPI>(spiDevice, speed);
 
-    if (!mSPI.Connect(static_cast<int>(spiDevice), static_cast<int>(speed))) {
-        throw std::runtime_error("gpio system failed to connect to the SPI device");
-    }
-
-    std::vector<long int> pGPIO_ports = *mpConfig->getArray("GPIO_ports")->getIntVector();
-    auto [debounceOk, debounce] = mpConfig->getInt("debounce");
-
-    if (!debounceOk) {
-        throw std::runtime_error("gpio system failed to load debounce value from config");
-    }
+    std::vector<long int> pGPIO_ports = *pConfig->getArray("gpio_ports")->getIntVector();
 
     if (pGPIO_ports.empty()) {
         spdlog::warn("gpio system failed to load pin numbers from config, assuming no buttons registered");
     }
+
+    int debounce = skylight::getConfigInt(pConfig, "gpio_debounce");
 
     for (long int GPIO_port: pGPIO_ports) {
         spdlog::info("button system setting up gpio port {} with debounce of {}", GPIO_port, debounce);
@@ -91,7 +32,8 @@ skylight::GPIO::GPIO(gpioAlertFuncEx_t buttonCallback, void *buttonCallbackConte
         gpioGlitchFilter(GPIO_port, debounce);
         gpioSetAlertFuncEx(GPIO_port, buttonCallback, buttonCallbackContext);
     }
-    spdlog::info("gpio system initialised");
+
+    spdlog::info("skylight gpio initialized");
 }
 
 skylight::GPIO::~GPIO() {
@@ -100,20 +42,13 @@ skylight::GPIO::~GPIO() {
 
 
 void skylight::GPIO::Update() {
-    spdlog::info("gpio system sending update to SPI hardware");
-    if (!mSPI.SendUpdateCommand()) {
-        spdlog::error("gpio system failed to send update command");
+    if (!mpSPI->SendUpdateCommand()) {
+        spdlog::error("skylight gpio failed to send correct number of bytes during the update command");
     }
 }
 
-void skylight::GPIO::Update(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                            const skylight_message::simple_void *msg) {
-    spdlog::info("gpio system received update command");
-    Update();
-}
-
 void skylight::GPIO::ReceiveBuffer(const skylight_message::pixel_buffer *pMsg) {
-    spdlog::info("gpio system received buffer");
-
-    mSPI.SendBufferToHardware(pMsg);
+    if (!mpSPI->SendBufferToHardware(pMsg)) {
+        spdlog::error("skylight gpio failed to send correct number of bytes during the buffer update command");
+    }
 }

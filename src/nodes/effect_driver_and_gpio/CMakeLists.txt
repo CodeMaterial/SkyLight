@@ -57,7 +57,7 @@ target_include_directories(${PROJECT_NAME}_messages INTERFACE
         ${SKYLIGHT_ROOT}/src/common)
 
 
-add_executable(${PROJECT_NAME} main.cpp ../effect_driver/effect_driver.cpp ../gpio/gpio.cpp ../effect_driver/effect_driver_node.cpp ../gpio/gpio_node.cpp)
+add_executable(${PROJECT_NAME} main.cpp ../effect_driver/effect_driver.cpp ../gpio/gpio.cpp ../effect_driver/effect_driver_node.cpp ../gpio/gpio_node.cpp ../gpio/spi.cpp)
 lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog pigpio)
 
 configure_file(${SKYLIGHT_ROOT}/src/config/service_template.service ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service)

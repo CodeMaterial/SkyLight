@@ -4,26 +4,25 @@
 
 skylight::SpeechNode::SpeechNode() {
 
+    spdlog::info("skylight speech node initialising");
+
     if (!mMessaging.good()) {
-        throw std::runtime_error("messaging failed to initialise");
+        throw std::runtime_error("skylight speech node failed to initialise messaging");
     }
 
-    mConfig = skylight::GetConfig("skylight_speech.toml");
+    skylight::Config pConfig = skylight::GetConfig("skylight_speech.toml");
 
-    auto [deviceStringSuccess, deviceString] = mConfig->getString("device");
+    std::string device = skylight::getConfigString(pConfig, "device");
 
-    if (!deviceStringSuccess) {
-        throw std::runtime_error("failed to grab device name from config file");
-    }
+    mpSpeech = std::make_shared<Speech>(fmt::format("sysdefault:CARD={}", device));
 
-    if (!mSpeech.Connect(deviceString)) {
-        throw std::runtime_error("speech failed to connect to device");
-    }
-
-    mMessaging.subscribe("speech/start", &skylight::SpeechNode::OnStart, this);
-    mMessaging.subscribe("speech/stop", &skylight::SpeechNode::OnStop, this);
+    mMessaging.subscribe("/speech/start", &skylight::SpeechNode::OnStart, this);
+    mMessaging.subscribe("/speech/stop", &skylight::SpeechNode::OnStop, this);
+    mMessaging.subscribe("/speech/jsgf", &skylight::SpeechNode::SetJSGF, this);
 
     mMessaging.Start();
+
+    spdlog::info("skylight speech node initialised");
 
 }
 
@@ -31,24 +30,32 @@ skylight::SpeechNode::~SpeechNode() {
     mMessaging.Stop();
 }
 
+void
+skylight::SpeechNode::SetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                              const skylight_message::simple_string *msg) {
+    spdlog::info("skylight speech node setting new jsgf file {}", msg->data);
+    mpSpeech->SetJSGF(msg->data);
+}
+
+
 void skylight::SpeechNode::OnStart(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                                    const skylight_message::simple_void *msg) {
-    spdlog::info("starting speech recognition");
-    mSpeech.Start();
+    spdlog::info("skylight speech node starting recording");
+    mpSpeech->Start();
 
 }
 
 void skylight::SpeechNode::OnStop(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                                   const skylight_message::simple_void *msg) {
-    spdlog::info("stopping speech recognition");
+    spdlog::info("skylight speech node stopping recording");
     skylight_message::simple_string userCommand;
-    std::string speechDetected = mSpeech.Stop();
+    std::string speechDetected = mpSpeech->Stop();
     if (!speechDetected.empty()) {
         userCommand.data = speechDetected;
-        spdlog::info("speech detected: {}", speechDetected);
-        mMessaging.publish("speech/command", &userCommand);
+        spdlog::info("skylight speech detected speech: {}", speechDetected);
+        mMessaging.publish("/speech/command", &userCommand);
     }
     if (speechDetected.empty()) {
-        spdlog::info("no speech detected");
+        spdlog::info("skylight speech did not detect any speech");
     }
 }

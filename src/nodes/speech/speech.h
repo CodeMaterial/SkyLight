@@ -14,26 +14,22 @@ namespace skylight {
 
     class Speech {
     public:
-        Speech();
+        Speech(std::string audioDevice);
 
         ~Speech();
 
-        bool Connect(std::string audioDevice);
-
-        bool Start();
+        void Start();
 
         std::string Stop();
 
-        //bool GenerateJSGF(std::string jsgfFile);
-
-        //bool SetJSGF(std::string jsgfFile);
+        bool SetJSGF(std::string jsgfFile);
 
     private:
 
-        bool RecordLoop();
+        void RecordLoop();
 
         const static int m_sampleRate = 16000;
-        const static int m_maxRecordTime = 10; //seconds
+        const static int m_maxRecordTime = 5; //seconds
 
         cmd_ln_t *m_pConfig;
         ps_decoder_t *m_pSpeechDecoder;
@@ -45,8 +41,6 @@ namespace skylight {
         std::mutex m_bufferMutex;
         short m_audioBuffer[m_sampleRate * m_maxRecordTime];
         int m_audioBufferFront;
-
-        bool m_connected = false;
 
     };
 }
