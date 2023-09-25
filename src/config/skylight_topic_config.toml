@@ -17,3 +17,5 @@
 "/effect_driver/update" = "/gpio/update"
 
 "/gpio/button_27/down" = "/effect_driver/test"
+
+"/speech/command" = "/command_to_topic/command"

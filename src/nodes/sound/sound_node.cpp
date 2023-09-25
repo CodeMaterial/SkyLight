@@ -2,10 +2,9 @@
 #include <exception>
 
 skylight::SoundNode::SoundNode(std::string name) {
+    mName = name;
 
     spdlog::info("skylight sound node \"{}\" initialising", mName);
-
-    mName = name;
 
     if (!mMessaging.good()) {
         throw std::runtime_error("skylight sound node failed to initialise messaging");
@@ -27,7 +26,7 @@ skylight::SoundNode::SoundNode(std::string name) {
         double defaultVolume = skylight::getConfigDouble(config, "default_volume");
         mpSound = std::make_shared<Sound>(card, volumeControl, static_cast<float>(defaultVolume));
 
-        mMessaging.subscribe("/sound/" + mName + "/speak", &skylight::SoundNode::PlaySpeech, this);
+        mMessaging.subscribe("/sound/" + mName + "/say", &skylight::SoundNode::PlaySpeech, this);
         mMessaging.subscribe("/sound/" + mName + "/play", &skylight::SoundNode::PlayAudio, this);
         mMessaging.subscribe("/sound/" + mName + "/volume", &skylight::SoundNode::SetVolume, this);
 

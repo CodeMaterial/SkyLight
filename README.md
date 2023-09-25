@@ -45,7 +45,7 @@ Default device names are `internal` and `external`
 
 | Topic                         | Type   | Example         |
 |-------------------------------|--------|-----------------|
-| `/sound/[device name]/speak`  | string | `hello there`   |
+| `/sound/[device name]/say`    | string | `hello there`   |
 | `/sound/[device name]/play`   | string | `~/example.wav` |
 | `/sound/[device name]/volume` | float  | `0.4`           |
 

@@ -25,7 +25,7 @@ target_include_directories(${PROJECT_NAME}_messages INTERFACE
         ${SKYLIGHT_ROOT}/src/common)
 
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp command_storage.cpp command_to_topic_node.cpp)
 lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog)
 
 install(TARGETS ${PROJECT_NAME}

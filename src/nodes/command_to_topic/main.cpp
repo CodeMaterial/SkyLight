@@ -1,111 +1,51 @@
 #include <iostream>
-#include "CLI11.hpp"
-#include "spdlog/spdlog.h"
 
-#include "skylight_messaging.h"
-
-#include "skylight_message/simple_void.hpp"
-#include "skylight_message/simple_string.hpp"
+#include "command_to_topic_node.h"
 #include "skylight_message/simple_float.hpp"
+#include "skylight_message/simple_string.hpp"
 
-#include <stdexcept>
+void SetVolume(std::vector<std::string> args, void *vpMessaging) {
 
-typedef std::function<void(std::vector<std::string>)> command_callback;
+    auto *pMessaging = static_cast<skylight::Messaging *>(vpMessaging);
 
-class CommandStore {
-public:
-    CommandStore() = default;
+    int volume;
+    std::string audio_device;
 
-    ~CommandStore() = default;
-
-    void RegisterOption(std::string optionID, std::vector<std::string> options) {
-        mOptions[optionID] = options;
+    if (args.size() == 2) {
+        audio_device = args[0];
+        volume = std::stoi(args[1]);
+    } else {
+        audio_device = "internal";
+        volume = std::stoi(args[0]);
     }
 
-    void RegisterCommand(std::string command, command_callback func) {
-        mCommands[command] = func;
-    }
+    skylight_message::simple_float volumeMsg{0, static_cast<float>(volume) / 10.0f};
 
-    bool CallFunc(std::string inputString) {
+    pMessaging->publish("/sound/" + audio_device + "/volume", &volumeMsg);
+}
 
-        for (auto const &[command, callback]: mCommands) {
-            auto [matchSuccess, arguments] = Match(inputString, command);
-            if (matchSuccess) {
-                callback(arguments);
-                return true;
-            }
-        }
-        return false;
-    }
+void WhatAreYou(std::vector<std::string> args, void *vpMessaging) {
+    spdlog::info("calling callback");
+    auto *pMessaging = static_cast<skylight::Messaging *>(vpMessaging);
 
-private:
-
-    std::pair<bool, std::vector<std::string>> Match(std::string inputString, std::string matchString) {
-
-        std::pair<bool, std::vector<std::string>> results = {true, {}};
-
-        int inputStringIndex = 0;
-        int matchStringIndex = 0;
-
-        while (inputStringIndex < inputString.size()) {
-
-            if (inputString[inputStringIndex] == matchString[matchStringIndex]) {
-                inputStringIndex++;
-                matchStringIndex++;
-
-            } else if (matchString[matchStringIndex] == '<') {
-                std::stringstream ss;
-                matchStringIndex++;
-                while (matchString[matchStringIndex] != '>') {
-                    ss << matchString[matchStringIndex];
-                    matchStringIndex++;
-                }
-
-                for (auto const &optionString: mOptions[ss.str()]) {
-                    if (inputString.substr(inputStringIndex, optionString.size()).compare(optionString) == 0) {
-                        results.second.push_back(optionString);
-                        inputStringIndex += static_cast<int>(optionString.size());
-                        break;
-                    }
-                }
-
-                if (results.second.empty()) {
-                    return std::make_pair<bool, std::vector<std::string>>(false, {});
-                }
-            } else if (inputString[inputStringIndex] != matchString[matchStringIndex]) {
-                return std::make_pair<bool, std::vector<std::string>>(false, {});
-            }
-        }
-
-        return results;
-    }
-
-    std::map<std::string, command_callback> mCommands;
-    std::map<std::string, std::vector<std::string>> mOptions;
-};
-
-void ExampleCallback(std::vector<std::string> args) {
-
-    if (args.size() == 0) spdlog::info("no args");
-    for (auto arg: args) {
-        spdlog::info("arg: {}", arg);
-    }
+    skylight_message::simple_string strMsg{0, "I am a pimoroni"};
+    pMessaging->publish("/sound/internal/say", &strMsg);
 }
 
 int main(int argc, char **argv) {
-    CommandStore cs;
+    skylight::CommandToTopicNode cttn;
 
-    cs.RegisterOption("number", {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"});
+    cttn.RegisterOption("number", {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"});
+    cttn.RegisterOption("audio_device", {"internal", "external"});
+    cttn.RegisterCommand("set <audio_device> volume to <number>", SetVolume);
+    cttn.RegisterCommand("set volume to <number>", SetVolume);
 
-    cs.RegisterCommand("set volume to <number>", ExampleCallback);
+    cttn.RegisterCommand("what are you", WhatAreYou);
 
-    cs.RegisterCommand("play thing", ExampleCallback);
+    cttn.SetJSGF("/tmp/skylight_grammar.jsgf");
 
-    cs.CallFunc("set volume to two"); // succ
-    cs.CallFunc("set volume to eleven"); // fail
-    cs.CallFunc("play thing"); // succ
-
-
+    while (true)
+        std::this_thread::sleep_for(std::chrono::seconds(1));
 
 }
 
