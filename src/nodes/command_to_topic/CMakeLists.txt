@@ -30,3 +30,8 @@ lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPA
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+configure_file(${SKYLIGHT_ROOT}/src/config/service_template.service ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service
+        DESTINATION /etc/systemd/system)
