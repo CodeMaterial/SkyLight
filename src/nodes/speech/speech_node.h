@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include "speech.h"
 #include "skylight_messaging.h"
 #include "skylight_config.h"
@@ -18,6 +20,9 @@ namespace skylight {
         void
         SetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_string *msg);
 
+        void
+        ResetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan, const skylight_message::simple_string *msg);
+
     private:
 
         void
@@ -27,5 +32,8 @@ namespace skylight {
 
         skylight::Messaging mMessaging;
         std::shared_ptr<Speech> mpSpeech;
+
+        std::atomic_bool mJsgfUpdated = false;
+        std::filesystem::path mJsgfFile;
     };
 }

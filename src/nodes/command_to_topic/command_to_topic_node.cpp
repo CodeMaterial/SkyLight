@@ -1,9 +1,10 @@
 #include "command_to_topic_node.h"
-#include "skylight_message/simple_string.hpp"
 
 skylight::CommandToTopicNode::CommandToTopicNode() {
 
     mMessaging.subscribe("/command_to_topic/command", &CommandToTopicNode::HandleCommand, this);
+
+    mMessaging.subscribe("/speech/jsgf/query", &skylight::CommandToTopicNode::SendJSGF, this)->setQueueCapacity(1);
 
     mMessaging.Start();
 
@@ -32,9 +33,18 @@ void skylight::CommandToTopicNode::RegisterCommand(std::string command, skylight
     mCommandStorage.RegisterCommand(command, func);
 }
 
-void skylight::CommandToTopicNode::SetJSGF(std::filesystem::path filepath) {
-    mCommandStorage.GenerateJSGF(filepath);
-    skylight_message::simple_string jsgfUpdateMsg;
-    jsgfUpdateMsg.data = filepath.c_str();
-    mMessaging.publish("/speech/jsgf", &jsgfUpdateMsg);
+void skylight::CommandToTopicNode::Ready() {
+    mReady = true;
+    SendJSGF(nullptr, "", nullptr);
+}
+
+void skylight::CommandToTopicNode::SendJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                                            const skylight_message::simple_void *msg) {
+    if (mReady) {
+        std::filesystem::path path = "/tmp/skylight_grammar.jsgf";
+        mCommandStorage.GenerateJSGF(path);
+        skylight_message::simple_string jsgfUpdateMsg{0, path.c_str()};
+        mMessaging.publish("/speech/jsgf", &jsgfUpdateMsg);
+    }
+
 }

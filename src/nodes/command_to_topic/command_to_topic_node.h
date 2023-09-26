@@ -3,6 +3,7 @@
 #include "command_storage.h"
 #include "skylight_messaging.h"
 #include "skylight_message/simple_string.hpp"
+#include "skylight_message/simple_void.hpp"
 #include <filesystem>
 
 namespace skylight {
@@ -17,14 +18,19 @@ namespace skylight {
 
         void RegisterCommand(std::string command, command_callback func);
 
-        void SetJSGF(std::filesystem::path filepath);
+        void Ready();
 
     private:
+
+
+        void SendJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                      const skylight_message::simple_void *msg);
 
         void HandleCommand(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                            const skylight_message::simple_string *msg);
 
         skylight::CommandStore mCommandStorage;
         skylight::Messaging mMessaging;
+        bool mReady = false;
     };
 }

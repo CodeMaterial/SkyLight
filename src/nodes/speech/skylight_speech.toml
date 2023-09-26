@@ -1,3 +1,4 @@
 #config for the speech system
 
 device = "Device"
+wait_for_jsgf = true

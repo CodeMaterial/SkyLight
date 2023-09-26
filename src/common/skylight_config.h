@@ -30,6 +30,14 @@ namespace skylight {
 
     // some wrappers to make this less gross
 
+    inline bool getConfigBool(Config config, std::string key) {
+        auto [ok, value] = config->getBool(key);
+        if (!ok) {
+            throw std::runtime_error(fmt::format("failed to find {} in config file", key));
+        }
+        return value;
+    }
+
     inline int64_t getConfigInt(Config config, std::string key) {
         auto [ok, value] = config->getInt(key);
         if (!ok) {

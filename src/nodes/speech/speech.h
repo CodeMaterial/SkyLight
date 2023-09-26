@@ -9,12 +9,13 @@
 #include <pocketsphinx/pocketsphinx.h>
 #include <mutex>
 #include <functional>
+#include <filesystem>
 
 namespace skylight {
 
     class Speech {
     public:
-        Speech(std::string audioDevice);
+        Speech(std::string audioDevice, std::filesystem::path jsgfFile = "");
 
         ~Speech();
 
@@ -22,7 +23,7 @@ namespace skylight {
 
         std::string Stop();
 
-        bool SetJSGF(std::string jsgfFile);
+        bool SetJSGF(std::filesystem::path jsgfFile);
 
     private:
 

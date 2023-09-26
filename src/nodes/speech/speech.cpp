@@ -1,16 +1,23 @@
 #include "speech.h"
 #include <spdlog/spdlog.h>
-#include <fstream>
 #include <iostream>
 
 
-skylight::Speech::Speech(std::string audioDevice) {
+skylight::Speech::Speech(std::string audioDevice, std::filesystem::path jsgfFile) {
 
     spdlog::info("skylight speech connecting to {}", audioDevice);
+
     static const arg_t cont_args_def[] = {POCKETSPHINX_OPTIONS,
                                           {"-adcdev", ARG_STRING, NULL, "Name of audio device to use for input."},
                                           CMDLN_EMPTY_OPTION};
-    m_pConfig = cmd_ln_init(NULL, cont_args_def, FALSE, "-inmic", "yes", "-adcdev", audioDevice.c_str(), NULL);
+
+    if (jsgfFile.empty() == false) {
+        m_pConfig = cmd_ln_init(NULL, cont_args_def, FALSE, "-inmic", "yes", "-jsgf", jsgfFile.c_str(), "-adcdev",
+                                audioDevice.c_str(), NULL);
+    } else {
+        m_pConfig = cmd_ln_init(NULL, cont_args_def, FALSE, "-inmic", "yes", "-adcdev", audioDevice.c_str(), NULL);
+    }
+
     ps_default_search_args(m_pConfig);
 
     if (m_pConfig == NULL) {
@@ -92,9 +99,9 @@ std::string skylight::Speech::Stop() {
     return std::string(command);
 }
 
-bool skylight::Speech::SetJSGF(std::string jsgfFile) {
+bool skylight::Speech::SetJSGF(std::filesystem::path jsgfFile) {
 
-    spdlog::info("skylight speech setting new jsgf file {}", jsgfFile);
+    spdlog::info("skylight speech setting new jsgf file {}", jsgfFile.string());
     static const arg_t cont_args_def[] = {POCKETSPHINX_OPTIONS,
                                           {"-adcdev", ARG_STRING, NULL, "Name of audio device to use for input."},
                                           CMDLN_EMPTY_OPTION};
@@ -156,7 +163,7 @@ void skylight::Speech::RecordLoop() {
 
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
-    
+
     if (ad_stop_rec(m_pDevice) < 0) {
         spdlog::error("skylight speech failed to stop recording");
         return;

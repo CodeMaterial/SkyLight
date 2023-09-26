@@ -1,8 +1,18 @@
-#include <iostream>
-
 #include "command_to_topic_node.h"
 #include "skylight_message/simple_float.hpp"
 #include "skylight_message/simple_string.hpp"
+
+//I don't like this...
+std::map<std::string, int> NUMBER_LOOKUP = {{"one",   1},
+                                            {"two",   2},
+                                            {"three", 3},
+                                            {"four",  4},
+                                            {"five",  5},
+                                            {"six",   6},
+                                            {"seven", 7},
+                                            {"eight", 8},
+                                            {"nine",  9},
+                                            {"ten",   10}};
 
 void SetVolume(std::vector<std::string> args, void *vpMessaging) {
 
@@ -13,10 +23,10 @@ void SetVolume(std::vector<std::string> args, void *vpMessaging) {
 
     if (args.size() == 2) {
         audio_device = args[0];
-        volume = std::stoi(args[1]);
+        volume = NUMBER_LOOKUP[args[1]];
     } else {
         audio_device = "internal";
-        volume = std::stoi(args[0]);
+        volume = NUMBER_LOOKUP[args[0]];
     }
 
     skylight_message::simple_float volumeMsg{0, static_cast<float>(volume) / 10.0f};
@@ -42,7 +52,7 @@ int main(int argc, char **argv) {
 
     cttn.RegisterCommand("what are you", WhatAreYou);
 
-    cttn.SetJSGF("/tmp/skylight_grammar.jsgf");
+    cttn.Ready();
 
     while (true)
         std::this_thread::sleep_for(std::chrono::seconds(1));

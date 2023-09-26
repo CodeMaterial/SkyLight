@@ -12,15 +12,32 @@ skylight::SpeechNode::SpeechNode() {
 
     skylight::Config pConfig = skylight::GetConfig("skylight_speech.toml");
 
-    std::string device = skylight::getConfigString(pConfig, "device");
+    bool waitForJsgf = skylight::getConfigBool(pConfig, "wait_for_jsgf");
 
-    mpSpeech = std::make_shared<Speech>(fmt::format("sysdefault:CARD={}", device));
+    std::string device = skylight::getConfigString(pConfig, "device");
+    mMessaging.Start();
+
+    if (waitForJsgf) {
+
+        mMessaging.subscribe("/speech/jsgf", &skylight::SpeechNode::SetJSGF, this);
+
+        while (mJsgfUpdated == false) {
+            spdlog::info("waiting for /speech/jsgf");
+            skylight_message::simple_void vMsg;
+            mMessaging.publish("/speech/jsgf/query", &vMsg);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        mpSpeech = std::make_shared<Speech>(fmt::format("sysdefault:CARD={}", device), mJsgfFile);
+
+    } else {
+
+        mMessaging.subscribe("/speech/jsgf", &skylight::SpeechNode::ResetJSGF, this);
+        mpSpeech = std::make_shared<Speech>(fmt::format("sysdefault:CARD={}", device));
+
+    }
 
     mMessaging.subscribe("/speech/start", &skylight::SpeechNode::OnStart, this);
     mMessaging.subscribe("/speech/stop", &skylight::SpeechNode::OnStop, this);
-    mMessaging.subscribe("/speech/jsgf", &skylight::SpeechNode::SetJSGF, this);
-
-    mMessaging.Start();
 
     spdlog::info("skylight speech node initialised");
 
@@ -34,7 +51,17 @@ void
 skylight::SpeechNode::SetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
                               const skylight_message::simple_string *msg) {
     spdlog::info("skylight speech node setting new jsgf file {}", msg->data);
+    mJsgfFile = msg->data;
+    mJsgfUpdated = true;
+}
+
+void
+skylight::SpeechNode::ResetJSGF(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                                const skylight_message::simple_string *msg) {
+    spdlog::info("skylight speech node setting new jsgf file {}", msg->data);
     mpSpeech->SetJSGF(msg->data);
+    mJsgfFile = msg->data;
+    mJsgfUpdated = true;
 }
 
 
