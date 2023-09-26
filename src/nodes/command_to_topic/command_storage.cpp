@@ -40,11 +40,7 @@ skylight::CommandStore::Match(std::string inputString, std::string matchString) 
 
     while (inputStringIndex < inputString.size()) {
 
-        if (inputString[inputStringIndex] == matchString[matchStringIndex]) {
-            inputStringIndex++;
-            matchStringIndex++;
-
-        } else if (matchString[matchStringIndex] == '<') {
+        if (matchString[matchStringIndex] == '<') {
             std::stringstream ss;
             matchStringIndex++;
             while (matchString[matchStringIndex] != '>') {
@@ -64,7 +60,12 @@ skylight::CommandStore::Match(std::string inputString, std::string matchString) 
             if (results.second.empty()) {
                 return std::make_pair<bool, std::vector<std::string>>(false, {});
             }
-        } else if (inputString[inputStringIndex] != matchString[matchStringIndex]) {
+
+        } else if (inputString[inputStringIndex] == matchString[matchStringIndex]) {
+            inputStringIndex++;
+            matchStringIndex++;
+
+        } else {
             return std::make_pair<bool, std::vector<std::string>>(false, {});
         }
     }

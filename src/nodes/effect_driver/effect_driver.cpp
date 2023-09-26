@@ -1,5 +1,6 @@
 #include "effect_driver.h"
 #include "spdlog/spdlog.h"
+#include "hsv_to_rgb.h"
 
 skylight::EffectDriver::EffectDriver(std::function<void(const skylight_message::pixel_buffer *)> onBuffer,
                                      std::function<void()> onUpdate) {
@@ -34,29 +35,48 @@ void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const st
     spdlog::info("skylight effect driver starting test effect");
 
     std::chrono::time_point effectStart = std::chrono::steady_clock::now();
-    std::chrono::time_point effectEnd = effectStart + std::chrono::seconds(2);
-
-    int i = 0;
-    int j = 0;
+    std::chrono::time_point effectEnd = effectStart + std::chrono::seconds(5);
+    std::chrono::duration effectDuration = effectEnd - effectStart;
 
     mNextFrameTimestamp = std::chrono::steady_clock::now();
     BlackNow();
+    BlackNow();
 
+    int loopCount = 0;
     while (mNextFrameTimestamp < effectEnd) {
         // do stuff to the buffer here referencing mNextFrameTimestamp for the "send" time
         {
-            mBuffer.buffer[i] = j;
-            j += 10;
-            if (j > 255) {
-                j = 0;
-                i++;
+            for (int ledIndex = 0; ledIndex < mLedsPerStrip
+                                              / 2; ledIndex++) {
+
+                HSV hsv{255, 255, 255};
+
+                float effectProgress =
+                        static_cast<float>((mNextFrameTimestamp - effectStart).count()) / effectDuration.count();
+
+                float temp = static_cast<float>(ledIndex) / (mLedsPerStrip / 2) + effectProgress;
+
+                hsv.hue = 255 * temp;
+
+                RGB rgb;
+                hsv2rgb_rainbow(hsv, rgb);
+
+                mBuffer.buffer[ledIndex * 3 + 0] = rgb.r;
+                mBuffer.buffer[ledIndex * 3 + 1] = rgb.g;
+                mBuffer.buffer[ledIndex * 3 + 2] = rgb.b;
+
+                mBuffer.buffer[(400 - ledIndex) * 3 + 0] = rgb.r;
+                mBuffer.buffer[(400 - ledIndex) * 3 + 1] = rgb.g;
+                mBuffer.buffer[(400 - ledIndex) * 3 + 2] = rgb.b;
             }
         }
+        loopCount++;
 
         PublishLedBuffer();
         WaitUntilNextFrame();
         UpdateLedBuffer();
     }
+    BlackNow();
     BlackNow();
 
     spdlog::info("skylight effect driver test effect ended");
