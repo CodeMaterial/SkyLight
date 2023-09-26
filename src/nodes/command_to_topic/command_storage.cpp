@@ -51,6 +51,7 @@ skylight::CommandStore::Match(std::string inputString, std::string matchString) 
                 ss << matchString[matchStringIndex];
                 matchStringIndex++;
             }
+            matchStringIndex++;
 
             for (auto const &optionString: mOptions[ss.str()]) {
                 if (inputString.substr(inputStringIndex, optionString.size()).compare(optionString) == 0) {
