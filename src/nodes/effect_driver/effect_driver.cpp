@@ -28,59 +28,17 @@ skylight::EffectDriver::EffectDriver(std::function<void(const skylight_message::
 skylight::EffectDriver::~EffectDriver() {
 }
 
+void skylight::EffectDriver::Run() {
+    mNextFrameTimestamp = std::chrono::steady_clock::now() + mDelay; // set first timestamp in the future
+    mCompositor.Render(mNextFrameTimestamp); //  start rendering that frame
 
-void skylight::EffectDriver::TestEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
-                                        const skylight_message::simple_void *msg) {
-
-    spdlog::info("skylight effect driver starting test effect");
-
-    std::chrono::time_point effectStart = std::chrono::steady_clock::now();
-    std::chrono::time_point effectEnd = effectStart + std::chrono::seconds(5);
-    std::chrono::duration effectDuration = effectEnd - effectStart;
-
-    mNextFrameTimestamp = std::chrono::steady_clock::now();
-    BlackNow();
-    BlackNow();
-
-    int loopCount = 0;
-    while (mNextFrameTimestamp < effectEnd) {
-        // do stuff to the buffer here referencing mNextFrameTimestamp for the "send" time
-        {
-            for (int ledIndex = 0; ledIndex < mLedsPerStrip
-                                              / 2; ledIndex++) {
-
-                HSV hsv{255, 255, 255};
-
-                float effectProgress =
-                        static_cast<float>((mNextFrameTimestamp - effectStart).count()) / effectDuration.count();
-
-                float temp = static_cast<float>(ledIndex) / (mLedsPerStrip / 2) + effectProgress;
-
-                hsv.hue = 255 * temp;
-
-                RGB rgb;
-                hsv2rgb_rainbow(hsv, rgb);
-
-                mBuffer.buffer[ledIndex * 3 + 0] = rgb.r;
-                mBuffer.buffer[ledIndex * 3 + 1] = rgb.g;
-                mBuffer.buffer[ledIndex * 3 + 2] = rgb.b;
-
-                mBuffer.buffer[(400 - ledIndex) * 3 + 0] = rgb.r;
-                mBuffer.buffer[(400 - ledIndex) * 3 + 1] = rgb.g;
-                mBuffer.buffer[(400 - ledIndex) * 3 + 2] = rgb.b;
-            }
-        }
-        loopCount++;
-
-        PublishLedBuffer();
-        WaitUntilNextFrame();
-        UpdateLedBuffer();
+    while (true) {
+        mCompositor.Compose(mBuffer.buffer); // compose the frame once rendering is complete
+        mCompositor.Render(mNextFrameTimestamp + mDelay); // start rendering the next frame
+        PublishLedBuffer(); // send led data out to hardware
+        WaitUntilNextFrame(); // wait until the next frame is avaliable
+        UpdateLedBuffer(); // send the update tick
     }
-    BlackNow();
-    BlackNow();
-
-    spdlog::info("skylight effect driver test effect ended");
-
 }
 
 void skylight::EffectDriver::PublishLedBuffer() {
@@ -102,7 +60,17 @@ void skylight::EffectDriver::BlackNow() {
 }
 
 void skylight::EffectDriver::WaitUntilNextFrame() {
-    std::this_thread::sleep_until(mNextFrameTimestamp - std::chrono::milliseconds(1)); // sleepy wait
-    while (std::chrono::steady_clock::now() < mNextFrameTimestamp); // busy wait
-    mNextFrameTimestamp = std::chrono::steady_clock::now() + mDelay;
+
+    auto now = std::chrono::steady_clock::now();
+    if (now > mNextFrameTimestamp) {
+        mNextFrameTimestamp = now + mDelay;
+    } else {
+        std::this_thread::sleep_until(mNextFrameTimestamp - std::chrono::milliseconds(1)); // sleepy wait
+        while (std::chrono::steady_clock::now() < mNextFrameTimestamp); // busy wait
+        mNextFrameTimestamp += mDelay;
+    }
+}
+
+void skylight::EffectDriver::AddEffect(std::shared_ptr<skylight::Effect> e) {
+    mCompositor.AddEffect(e);
 }

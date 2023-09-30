@@ -14,6 +14,7 @@ lcm_wrap_types(
         CPP_HEADERS ${PROJECT_NAME}_headers
         ${SKYLIGHT_ROOT}/src/message_types/pixel_buffer.lcm
         ${SKYLIGHT_ROOT}/src/message_types/simple_void.lcm
+        ${SKYLIGHT_ROOT}/src/message_types/simple_string.lcm
 
 )
 
@@ -24,7 +25,13 @@ target_include_directories(${PROJECT_NAME}_messages INTERFACE
         ${SKYLIGHT_ROOT}/src/common)
 
 
-add_executable(${PROJECT_NAME} main.cpp effect_driver.cpp effect_driver_node.cpp)
+add_executable(${PROJECT_NAME}
+        main.cpp
+        effect_driver.cpp
+        effect_driver_node.cpp
+        effects/compositor.cpp
+        effects/effect.cpp)
+
 lcm_target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_messages ${LCM_NAMESPACE}lcm tomlcpp spdlog::spdlog)
 
 configure_file(${SKYLIGHT_ROOT}/src/config/service_template.service ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.service)

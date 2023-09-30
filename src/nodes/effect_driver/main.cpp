@@ -7,7 +7,5 @@ int main(int argc, char **argv) {
     skylight::EffectDriverNode effectDriverNode;
     spdlog::info("skylight effect driver node started");
 
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    effectDriverNode.Run();
 }

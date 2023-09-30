@@ -1,5 +1,7 @@
 #include "effect_driver_node.h"
 #include <exception>
+#include <memory>
+#include "effects/effects/basic_effect.h"
 
 skylight::EffectDriverNode::EffectDriverNode(std::shared_ptr<skylight::EffectDriver> pEffectDriverOverride) {
 
@@ -27,11 +29,27 @@ skylight::EffectDriverNode::EffectDriverNode(std::shared_ptr<skylight::EffectDri
         mpEffectDriver = std::make_shared<skylight::EffectDriver>(onBuffer, onUpdate);
     }
 
-    mMessaging.subscribe("/effect_driver/effects/test/start", &EffectDriver::TestEffect, mpEffectDriver.get());
+    mMessaging.subscribe("/effect_driver/effects/start", &EffectDriverNode::AddEffect, this);
 
     mMessaging.Start();
 }
 
 skylight::EffectDriverNode::~EffectDriverNode() {
 
+}
+
+void skylight::EffectDriverNode::Run() {
+    mpEffectDriver->Run();
+}
+
+void skylight::EffectDriverNode::AddEffect(const lcm::ReceiveBuffer *rbuf, const std::string &chan,
+                                           const skylight_message::simple_string *msg) {
+
+    std::string effectName = msg->data;
+
+    if (effectName == "basic_effect") {
+        Timestamp start = std::chrono::steady_clock::now();
+        Duration duration = std::chrono::seconds(5);
+        mpEffectDriver->AddEffect(std::make_shared<BasicEffect>(start, duration));
+    }
 }

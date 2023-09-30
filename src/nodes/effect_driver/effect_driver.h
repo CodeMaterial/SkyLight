@@ -4,6 +4,9 @@
 #include <functional>
 #include <chrono>
 
+#include "effects/effect.h"
+#include "effects/compositor.h"
+
 #include "skylight_messaging.h"
 #include "skylight_message/simple_void.hpp"
 #include "skylight_message/pixel_buffer.hpp"
@@ -26,6 +29,10 @@ namespace skylight {
 
         void BlackNow();
 
+        void AddEffect(std::shared_ptr<skylight::Effect> e);
+
+        void Run();
+
     private:
 
         void WaitUntilNextFrame();
@@ -41,6 +48,8 @@ namespace skylight {
 
         int mLedsPerStrip;
         int mChannelCount;
+
+        skylight::Compositor mCompositor;
     };
 
 }
