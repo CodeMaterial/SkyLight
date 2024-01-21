@@ -1,0 +1,25 @@
+name: Skylight ci-cd
+
+on:
+  push:
+    branches: [ "main", "feat-cicd" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build_x_thing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+#      - name: Test
+#        working-directory: ${{github.workspace}}/build
+#        run: ctest -C ${{env.BUILD_TYPE}}

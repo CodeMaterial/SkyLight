@@ -5,6 +5,29 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(SKYLIGHT_ROOT ../../..)
 
+include(FetchContent)
+
+FetchContent_Declare(
+        lcm
+        GIT_REPOSITORY https://github.com/lcm-proj/lcm.git
+        GIT_TAG master
+)
+FetchContent_MakeAvailable(lcm)
+
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.x
+)
+FetchContent_MakeAvailable(spdlog)
+
+FetchContent_Declare(
+        toml
+        GIT_REPOSITORY https://github.com/cktan/tomlcpp.git
+        GIT_TAG main
+)
+FetchContent_MakeAvailable(toml)
+
 find_package(lcm REQUIRED)
 find_package(spdlog REQUIRED)
 
@@ -15,7 +38,6 @@ lcm_wrap_types(
         ${SKYLIGHT_ROOT}/src/message_types/simple_string.lcm
         ${SKYLIGHT_ROOT}/src/message_types/simple_void.lcm
         ${SKYLIGHT_ROOT}/src/message_types/simple_float.lcm
-
 )
 
 lcm_add_library(${PROJECT_NAME}_messages CPP ${${PROJECT_NAME}_headers})
