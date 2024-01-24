@@ -1,5 +1,7 @@
 # SkyLight
 
+![example workflow](https://github.com/themariday/skylight/actions/workflows/simple_build.yml/badge.svg)
+
 Project Skylight is a collection of nodes that you can easily configure to control electronic fursuits
 
 # Installation
