@@ -1,0 +1,27 @@
+name: Skylight Simple
+
+on:
+  push:
+    branches: [ "main"]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build_x_thing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Dependencies
+        run: ./install_dependencies.sh
+
+      - name: Configure
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+      - name: Install
+        run: cmake --install ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
